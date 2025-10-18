@@ -5,4 +5,3 @@ setup-system-dependencies:
 
 run:
 	python rnable_2/manage.py runserver
-

@@ -31,7 +31,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    
+
     /* Banner background image - centered and tiled horizontally */
     background-image: url('../images/banner/banner_full.png');
     background-position: center top;
