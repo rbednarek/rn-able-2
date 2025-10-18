@@ -128,6 +128,7 @@ body {
     font-family: 'Courier New', Courier, monospace;
     font-weight: normal;
     flex: 1;
+    position: relative;
 }
 
 .info-box {
@@ -139,6 +140,43 @@ body {
     font-family: 'Courier New', Courier, monospace;
     font-weight: normal;
     flex: 1;
+}
+
+
+.info-links {
+    list-style: none;
+    padding: 0;
+    margin-top: 15px;
+}
+
+.info-links li {
+    margin-bottom: 12px;
+}
+
+/* Whole link clickable */
+.info-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;             /* space between icon and text */
+    color: #fff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    padding: 5px 10px;     /* optional hover padding */
+    border-radius: 4px;    /* optional rounding */
+}
+
+.info-link:hover {
+    background-color: #1a1c1c;
+}
+
+.info-link-img {
+    width: 36px;   /* 50% larger than original 24px */
+    height: 36px;
+}
+
+.info-link-text {
+    display: inline-block;
 }
 
 .welcome-box h1,
@@ -292,6 +330,17 @@ body {
 .account-logout {
     text-align: center;
     margin-top: 20px;
+}
+
+/* Licesnse info */
+.license-info {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    font-family: sans-serif;
+    font-size: 0.75rem;
+    color: #ccc;
+    margin-top: 10px;
 }
 
 /* Responsive Design */
