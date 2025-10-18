@@ -48,6 +48,68 @@ body {
     width: 200px;  /* Changed from 400px to 200px (half) */
 }
 
+/* Dropdown Menu Styles */
+.banner-dropdowns {
+    position: absolute;
+    bottom: 10px;          /* distance from bottom edge */
+    left: 30px;            /* distance from left edge */
+    display: flex;
+    gap: 20px;             /* space between dropdowns */
+    z-index: 2;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropbtn {
+    background-color: #0e1111;
+    color: #fff;
+    border: none;
+    font-size: 1rem;
+    font-family: 'Courier New', Courier, monospace;
+    cursor: pointer;
+    padding: 10px;
+    transition: color 0.2s ease;
+    border-radius: 8px;
+}
+
+.banner-dropdowns a.dropbtn {
+    text-decoration: none; /* removes underline */
+    display: inline-block; /* ensure padding works like button */
+}
+
+.dropbtn:hover {
+    color: #ddd;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #222;
+    min-width: 180px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    z-index: 1;
+    border-radius: 6px;
+}
+
+.dropdown-content a {
+    color: #fff;
+    padding: 10px 14px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content a:hover {
+    background-color: #333;
+}
+
+/* Show the dropdown on hover */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
 /* Content Boxes */
 
 .two-column-container {

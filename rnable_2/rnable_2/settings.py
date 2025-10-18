@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'home',
     'de_analysis',
     'enrichment',
+    'data_upload',
 ]
 
 MIDDLEWARE = [
