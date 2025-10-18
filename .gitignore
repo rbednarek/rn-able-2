@@ -208,6 +208,6 @@ __marimo__/
 
 
 #Images
-**/*.jpg
-**/*.png
-**/*.pdf
+# **/*.jpg
+# **/*.png
+# **/*.pdf

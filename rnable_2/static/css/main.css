@@ -24,26 +24,77 @@ body {
 
 /* Banner Styles */
 .banner {
+    position: relative;
     text-align: center;
-    padding: 20px;
+    padding: 0;
+    min-height: 100px; /* Adjust based on your banner height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Banner background image - centered and tiled horizontally */
+    background-image: url('../images/banner/banner_full.png');
+    background-position: center top;
+    background-repeat: repeat-x;
+    background-size: auto 100%; /* Height fills banner, tiles horizontally */
 }
 
-.banner img {
-    width: 400px;
-    height: 133px;
-    object-fit: fill;
+.banner-img {
+    position: relative;
+    z-index: 10;
+    max-width: 90%;
+    height: auto;
+    /* Adjust size as needed */
+    width: 200px;  /* Changed from 400px to 200px (half) */
 }
 
 /* Content Boxes */
+
+.two-column-container {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
 .welcome-box {
-    background-color: tan;
+    background-color: #0e1111;
     padding: 20px;
     margin-bottom: 20px;
     border-radius: 8px;
+    color: white;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: normal;
+    flex: 1;
+}
+
+.info-box {
+    background-color: #0e1111;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    color: white;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: normal;
+    flex: 1;
+}
+
+.welcome-box h1,
+.info-box h1 {
+    color: white;
+}
+
+.ascii-title {
+    font-family: 'Courier New', Courier, monospace;
+    white-space: pre;
+    line-height: 1.2;
+    font-size: 14px;
+    color: white;
+    margin-bottom: 20px;
 }
 
 .forum-sections {
-    background-color: tan;
+    background-color: #0e1111;
     padding: 20px;
     border-radius: 8px;
 }
@@ -117,6 +168,11 @@ body {
 
 .logout-button:hover {
     text-decoration: underline;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+    display: none;
 }
 
 /* Logout Form */
