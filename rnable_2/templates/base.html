@@ -1,0 +1,89 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="RN-able - RNA Analysis and Bioinformatics Platform">
+    <title>{% block title %}RN-able{% endblock %}</title>
+
+    {# Main CSS #}
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+    {# Page-specific CSS #}
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {# Logout Button (if authenticated) #}
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'admin:logout' %}" class="logout-form">
+        {% csrf_token %}
+        <button type="submit" class="logout-button">Logout</button>
+    </form>
+    {% endif %}
+
+    {# Banner with Layered Backgrounds #}
+    <div class="banner">
+        {# Centered logo overlay #}
+        <a href="{% url 'home:home' %}">
+            <img src="{% static 'images/banner/rnable2_400_133.png' %}" alt="RN-able Logo" class="banner-img">
+        </a>
+        <div class="banner-dropdowns">
+            <a href="{% url 'home:home' %}" class="dropbtn">Home</a>
+            <div class="dropdown">
+                <button class="dropbtn">Apps</button>
+                <div class="dropdown-content">
+                    <a href="{% url 'de_analysis:dea' %}">DE Analysis</a>
+                    <a href="{% url 'enrichment:enrich' %}">Enrichment Analysis</a>
+                </div>
+            </div>
+            <div class="dropdown">
+                <button class="dropbtn">Upload Data</button>
+                <div class="dropdown-content">
+                    <a href="{% url 'data_upload:single_upload' %}">Single File Upload</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Main Content Container #}
+    <div class="container">
+        {# Django Messages #}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {# Page Content #}
+        {% block content %}{% endblock %}
+    </div>
+
+    {# Loading Overlay #}
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div id="loading-message" class="loading-message">Processing...</div>
+    </div>
+
+    {# JavaScript Utilities #}
+    <script>
+        // Global utility functions
+        function showLoading(message = 'Processing...') {
+            const overlay = document.getElementById('loading-overlay');
+            const messageEl = document.getElementById('loading-message');
+            messageEl.textContent = message;
+            overlay.classList.add('active');
+        }
+
+        function hideLoading() {
+            const overlay = document.getElementById('loading-overlay');
+            overlay.classList.remove('active');
+        }
+    </script>
+
+    {# Page-specific JavaScript #}
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
