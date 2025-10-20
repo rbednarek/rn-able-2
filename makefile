@@ -9,5 +9,8 @@ setup-db:
 run:
 	python rnable_2/manage.py runserver
 
+db-make-migrations:
+	python rnable_2/manage.py makemigrations
+
 db-migrate:
 	python rnable_2/manage.py migrate
