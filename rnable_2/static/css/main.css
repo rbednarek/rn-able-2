@@ -547,3 +547,29 @@ body {
     width: 36px;
     height: 36px;
 }
+
+.file-input-wrapper {
+  display: inline-block;
+  position: relative;
+}
+
+.file-input-wrapper input[type="file"] {
+  cursor: pointer;
+  width: auto;               /* Prevents expanding clickable area */
+  display: inline-block;
+  overflow: hidden;
+}
+
+input[type="file"]::-webkit-file-upload-button {
+  cursor: pointer;           /* Pointer over the actual button */
+}
+
+input[type="file"]::file-selector-button {
+  cursor: pointer;           /* Modern browsers */
+}
+
+input[type="file"] {
+  font-family: 'Courier New', monospace;  /* make text Courier */
+  color: #fff;                            /* soft grey or whatever fits */                     /* space between button & filename */
+  cursor: default;                        /* normal arrow over text area */
+}

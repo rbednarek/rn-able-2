@@ -11,6 +11,7 @@ Libraries to manage with poetry:
 
 To Do:
  -Remove session.count_data = None from de_analysis views once we decide to keep raw count data for session
+ -Consider swapping native filename rendering to custom to create space between choose file button and filename
 
 # RN-able 2 Setup Instructions
 
