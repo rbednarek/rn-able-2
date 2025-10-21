@@ -50,6 +50,7 @@
  / ____/ /___/ ___ |   / ____/ / /_/ / /_
 /_/    \____/_/  |_|  /_/   /_/\____/\__/
             </pre>
+            <div id="scatter-plot" class="plot-container"></div>
         </div>
         <div class="groups-container">
             <pre class="ascii-title-small">
@@ -67,7 +68,7 @@
 
 {% block extra_js %}
 <!-- Plotly.js -->
-<script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -89,5 +90,35 @@ document.addEventListener("DOMContentLoaded", function() {
     setupUpload("count-upload-trigger", "count-file", "count-file-name");
     setupUpload("metadata-upload-trigger", "metadata-file", "metadata-file-name");
 });
+</script>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var plotDiv = document.getElementById('scatter-plot');
+        var trace = {
+            x: [],  // empty
+            y: [],  // empty
+            mode: 'markers',
+            type: 'scatter',
+            marker: { size: 10, color: 'blue' }
+        };
+
+        var data = [trace];
+
+        var layout = {
+            xaxis: { title: 'PC1' },
+            yaxis: { title: 'PC2' },
+            margin: { t: 40, l: 50, r: 20, b: 50 },
+            paper_bgcolor: '#0e1111',
+            plot_bgcolor: '#0e1111',
+            font: { color: '#fff', family: 'Courier New, monospace' }
+        };
+
+        Plotly.newPlot('scatter-plot', data, layout, {responsive: true});
+        window.addEventListener('resize', function() {
+        Plotly.Plots.resize(plotDiv);
+    });
+    });
 </script>
 {% endblock %}
