@@ -4,17 +4,71 @@
 
 {% block title %}RN-able - DE Analysis{% endblock %}
 
+{% block banner_title %}
+<div class="banner-page-title">Differential Expression Analysis</div>
+{% endblock %}
 
 {% block content %}
-<div class="welcome-box">
-        <pre class="ascii-title">
-    ____  ______   ___                __           _
-   / __ \/ ____/  /   |  ____  ____ _/ /_  _______(_)____
-  / / / / __/    / /| | / __ \/ __ `/ / / / / ___/ / ___/
- / /_/ / /___   / ___ |/ / / / /_/ / / /_/ (__  ) (__  )
-/_____/_____/  /_/  |_/_/ /_/\__,_/_/\__, /____/_/____/
-                                    /____/
-        </pre>
+<div class="de-layout">
+        <div class="upload-container">
+                <pre class="ascii-title">
+    _______ __        __  __      __                __
+   / ____(_) /__     / / / /___  / /___  ____ _____/ /
+  / /_  / / / _ \   / / / / __ \/ / __ \/ __ `/ __  /
+ / __/ / / /  __/  / /_/ / /_/ / / /_/ / /_/ / /_/ /
+/_/   /_/_/\___/   \____/ .___/_/\____/\__,_/\__,_/
+                       /_/
+                    </pre>
+        <form id="upload-form" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="count-file">Count Data:</label>
+                <input type="file" id="count-file" name="count_file"
+                       accept=".csv,.tsv,.csv.gz,.tsv.gz" required>
+            </div>
 
+            <div class="form-group">
+                <label for="metadata-file">Metadata (optional):</label>
+                <input type="file" id="metadata-file" name="metadata_file"
+                       accept=".csv,.tsv,.csv.gz,.tsv.gz">
+            </div>
+
+            <div class="upload-button">
+                <button type="submit" class="info-link upload-trigger">
+                        <img src="{% static 'images/icons/app_button.png' %}"
+                        alt="Upload Icon" class="info-link-img">
+                        <span class="info-link-text">Run PCA</span>
+                </button>
+            </div>
+        </form>
+
+        </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Plotly.js -->
+<script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const setupUpload = (triggerId, inputId, fileNameId) => {
+        const trigger = document.getElementById(triggerId);
+        const input = document.getElementById(inputId);
+        const fileNameDisplay = document.getElementById(fileNameId);
+
+        trigger.addEventListener("click", () => input.click());
+        input.addEventListener("change", () => {
+            if (input.files.length > 0) {
+                fileNameDisplay.textContent = input.files[0].name;
+            } else {
+                fileNameDisplay.textContent = "";
+            }
+        });
+    };
+
+    setupUpload("count-upload-trigger", "count-file", "count-file-name");
+    setupUpload("metadata-upload-trigger", "metadata-file", "metadata-file-name");
+});
+</script>
 {% endblock %}
