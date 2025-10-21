@@ -8,6 +8,10 @@ Libraries to manage with poetry:
 - psycopg2-binary
 - postgres
 
+
+To Do:
+ -Remove session.count_data = None from de_analysis views once we decide to keep raw count data for session
+
 # RN-able 2 Setup Instructions
 
 ## Prerequisites

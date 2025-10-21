@@ -48,6 +48,14 @@ body {
     width: 200px;  /* Changed from 400px to 200px (half) */
 }
 
+.banner-title {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: #fff;
+    font-size: 1.2em;
+    text-align: right;
+}
+
 /* Dropdown Menu Styles */
 .banner-dropdowns {
     position: absolute;
