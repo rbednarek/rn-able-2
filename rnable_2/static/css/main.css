@@ -214,6 +214,15 @@ body {
     margin-bottom: 20px;
 }
 
+.ascii-title-small {
+    font-family: 'Courier New', Courier, monospace;
+    white-space: pre;
+    line-height: 1.2;
+    font-size: 12px;
+    color: white;
+    margin-bottom: 20px;
+}
+
 .forum-sections {
     background-color: #0e1111;
     padding: 20px;
@@ -401,32 +410,25 @@ body {
    DE Analysis Layout
    ============================================ */
 .de-layout {
-    display: flex;             /* use flex so left adapts to content */
-    gap: 20px;                 /* horizontal buffer between upload & plot */
-    align-items: flex-start;   /* top-align both containers */
+    display: grid;
+    grid-template-columns: auto 1fr; /* left column adapts to widest content, right fills remaining */
+    grid-template-rows: auto 1fr;    /* top = upload, bottom = groups */
+    gap: 20px;                       /* horizontal and vertical gap */
     width: 100%;
 }
 
-/* Left column - file upload section */
+/* Left column - upload container (top) */
 .upload-container {
+    grid-column: 1;
+    grid-row: 1;
     background-color: #0e1111;
     padding: 20px;
     border-radius: 8px;
     color: white;
     font-family: 'Courier New', Courier, monospace;
-    flex-shrink: 0;            /* prevents shrinking if ASCII title is long */
 }
 
-/* Right column: plot container */
-.plot-container {
-    background-color: #0e1111;
-    padding: 20px;
-    border-radius: 8px;
-    min-height: 600px;
-    flex-grow: 1;              /* takes remaining horizontal space */
-}
-
-/* Left column - group definition section */
+/* Left column - groups container (bottom) */
 .groups-container {
     grid-column: 1;
     grid-row: 2;
@@ -435,7 +437,20 @@ body {
     border-radius: 8px;
     color: white;
     font-family: 'Courier New', Courier, monospace;
+    height: calc(100% - <upload-container-height> - 20px);
+    /* optionally set min-height if you want to match plot container minus upload */
 }
+
+/* Right column - plot container (spans full height) */
+.plot-container {
+    grid-column: 2;
+    grid-row: 1 / 3; /* spans both rows of left column */
+    background-color: #0e1111;
+    padding: 20px;
+    border-radius: 8px;
+    min-height: 600px;
+}
+
 
 .upload-container h2,
 .groups-container h2,
