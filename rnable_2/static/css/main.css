@@ -401,35 +401,29 @@ body {
    DE Analysis Layout
    ============================================ */
 .de-layout {
-    display: grid;
-    grid-template-columns: 300px 1fr;
-    grid-template-rows: auto auto;
-    gap: 20px;
+    display: flex;             /* use flex so left adapts to content */
+    gap: 20px;                 /* horizontal buffer between upload & plot */
+    align-items: flex-start;   /* top-align both containers */
     width: 100%;
 }
 
 /* Left column - file upload section */
 .upload-container {
-    grid-column: 1;
-    grid-row: 1;
-    position: absolute;
-    left: 20px;
     background-color: #0e1111;
     padding: 20px;
     border-radius: 8px;
     color: white;
     font-family: 'Courier New', Courier, monospace;
+    flex-shrink: 0;            /* prevents shrinking if ASCII title is long */
 }
 
-/* Right column - PCA plot */
+/* Right column: plot container */
 .plot-container {
-    left: 20px;
-    grid-column: 2;
-    grid-row: 1 / 3; /* Spans both rows */
     background-color: #0e1111;
     padding: 20px;
     border-radius: 8px;
     min-height: 600px;
+    flex-grow: 1;              /* takes remaining horizontal space */
 }
 
 /* Left column - group definition section */
