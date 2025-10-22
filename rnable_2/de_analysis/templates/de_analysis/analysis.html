@@ -9,6 +9,8 @@
 {% endblock %}
 
 {% block content %}
+
+
 <div class="de-layout">
         <div class="upload-container">
                 <pre class="ascii-title-small">
@@ -19,6 +21,7 @@
 /_/   /_/_/\___/   \____/ .___/_/\____/\__,_/\__,_/
                        /_/
                     </pre>
+        {% if not session_id %}
         <form id="upload-form" enctype="multipart/form-data">
             <div class="form-group">
                 <span class="form-label">Count Data:</span>
@@ -40,7 +43,24 @@
                 </button>
             </div>
         </form>
+        {% else %}
+        <!-- Session exists - show session info -->
+        <div style="color: white;">
+            <p><strong>Session:</strong> {{ session_id }}</p>
+            <p><strong>Samples:</strong> {{ session.get_sample_count }}</p>
+            <p><strong>Genes:</strong> {{ session.get_gene_count }}</p>
 
+            {% if not pca_data %}
+            <button id="run-pca-btn" class="info-link" style="margin-top: 15px;">
+                <img src="{% static 'images/icons/app_button.png' %}"
+                     alt="Run Icon" class="info-link-img">
+                <span class="info-link-text">Run PCA</span>
+            </button>
+            {% else %}
+            <p style="margin-top: 15px; color: #4CAF50;">✓ PCA Complete</p>
+            {% endif %}
+        </div>
+        {% endif %}
         </div>
         <div class="plot-container">
             <pre class="ascii-title-small">
@@ -71,54 +91,150 @@
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    const setupUpload = (triggerId, inputId, fileNameId) => {
-        const trigger = document.getElementById(triggerId);
-        const input = document.getElementById(inputId);
-        const fileNameDisplay = document.getElementById(fileNameId);
+const state = {
+    sessionId: '{{ session_id|default:"" }}',
+};
 
-        trigger.addEventListener("click", () => input.click());
-        input.addEventListener("change", () => {
-            if (input.files.length > 0) {
-                fileNameDisplay.textContent = input.files[0].name;
-            } else {
-                fileNameDisplay.textContent = "";
-            }
-        });
+(function() {
+    const layout = {
+        xaxis: {title: 'PC1'},
+        yaxis: {title: 'PC2'},
+        margin: {t: 40, l: 50, r: 20, b: 50},
+        paper_bgcolor: '#0e1111',
+        plot_bgcolor: '#0e1111',
+        font: {color: '#fff', family: 'Courier New, monospace'},
+        hovermode: 'closest',
+        dragmode: 'select'
     };
 
-    setupUpload("count-upload-trigger", "count-file", "count-file-name");
-    setupUpload("metadata-upload-trigger", "metadata-file", "metadata-file-name");
-});
-</script>
+    const config = {
+        responsive: true,
+        displaylogo:false,
+        displayModeBar: true,
+        modeBarButtonsToAdd: []
+    };
 
+    Plotly.newPlot('scatter-plot', [], layout, config);
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var plotDiv = document.getElementById('scatter-plot');
-        var trace = {
-            x: [],  // empty
-            y: [],  // empty
+    // Responsive resize
+    window.addEventListener('resize', function() {
+        Plotly.Plots.resize(document.getElementById('scatter-plot'));
+    });
+})();
+{% if pca_data %}
+(function() {
+    const plotConfig = {{ pca_data.plot_config|safe }};
+    const traces = [];
+
+    if (plotConfig.metadata && plotConfig.metadata_columns) {
+        // Group by metadata column
+        const col1 = plotConfig.metadata_columns[0];
+        const groups = {};
+
+        plotConfig.samples.forEach((sample, i) => {
+            const group = plotConfig.metadata[col1][i];
+            if (!groups[group]) {
+                groups[group] = {samples: [], pc1: [], pc2: []};
+            }
+            groups[group].samples.push(sample);
+            groups[group].pc1.push(plotConfig.pc1[i]);
+            groups[group].pc2.push(plotConfig.pc2[i]);
+        });
+
+        Object.entries(groups).forEach(([groupName, groupData]) => {
+            traces.push({
+                x: groupData.pc1,
+                y: groupData.pc2,
+                mode: 'markers',
+                type: 'scatter',
+                name: groupName,
+                text: groupData.samples,
+                marker: {size: 10}
+            });
+        });
+    } else {
+        // Simple scatter
+        traces.push({
+            x: plotConfig.pc1,
+            y: plotConfig.pc2,
             mode: 'markers',
             type: 'scatter',
-            marker: { size: 10, color: 'blue' }
-        };
+            text: plotConfig.samples,
+            marker: {size: 10, color: '#c9ba30ff'}
+        });
+    }
 
-        var data = [trace];
+    const layout = {
+        xaxis: {title: `PC1 ({{ pca_data.pc1_variance|floatformat:2 }}%)`},
+        yaxis: {title: `PC2 ({{ pca_data.pc2_variance|floatformat:2 }}%)`},
+        margin: {t: 40, l: 50, r: 20, b: 50},
+        paper_bgcolor: '#0e1111',
+        plot_bgcolor: '#1a1c1c',
+        font: {color: '#fff', family: 'Courier New, monospace'},
+        hovermode: 'closest',
+        dragmode: 'select'
+    };
 
-        var layout = {
-            xaxis: { title: 'PC1' },
-            yaxis: { title: 'PC2' },
-            margin: { t: 40, l: 50, r: 20, b: 50 },
-            paper_bgcolor: '#0e1111',
-            plot_bgcolor: '#0e1111',
-            font: { color: '#fff', family: 'Courier New, monospace' }
-        };
+    // Use Plotly.react to update existing plot
+    Plotly.react('scatter-plot', traces, layout);
+})();
+{% endif %}
 
-        Plotly.newPlot('scatter-plot', data, layout, {responsive: true});
-        window.addEventListener('resize', function() {
-        Plotly.Plots.resize(plotDiv);
-    });
-    });
+
+{% if not session_id %}
+document.getElementById('upload-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const formData = new FormData();
+    const countFile = document.getElementById('count-file').files[0];
+    const metadataFile = document.getElementById('metadata-file').files[0];
+
+    formData.append('count_file', countFile);
+    if (metadataFile) {
+        formData.append('metadata_file', metadataFile);
+    }
+    showLoading('Running PCA...');
+
+    try {
+        const uploadResponse = await fetch("{% url 'de_analysis:upload_data' %}", {
+            method: 'POST',
+            body: formData
+        });
+
+        const uploadData = await uploadResponse.json();
+        if (!uploadData.success) {
+            alert('Upload failed: ' + uploadData.error);
+            hideLoading();
+            return;
+        }
+        const newURL = `{% url 'de_analysis:de-analysis' %}?session_id=${uploadData.session_id}`;
+        window.history.pushState({session: uploadData.session_id}, '', newURL);
+
+        // Run PCA
+        const pcaResponse = await fetch("{% url 'de_analysis:run_pca' %}", {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({session_id: uploadData.session_id})
+        });
+
+        const pcaData = await pcaResponse.json();
+
+        //if (pcaData.success) {
+        //    Run function to update PCA plot here
+        //    Overwrite file upload container displaying basic stats ie Session ID, sample #, gene #, Group #,
+        //    with option to download CSV with Session, file name info, date created for record keeping
+        //    update groups container to show group assignment options and submit de analysis button
+        //
+        //}
+
+    } catch (error) {
+        alert('Error: ' + error.message);
+        hideLoading();
+    }
+});
+{% endif %}
 </script>
-{% endblock %}
+
+
+
+{% endblock %} -->
