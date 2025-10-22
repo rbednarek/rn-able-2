@@ -100,6 +100,8 @@ def upload_data(request):
                 "redirect_url": f"/de-analysis/?session={session_id}",
                 "samples": list(count_df.columns),
                 "genes": len(count_df),
+                "count_file_name": count_file.name,
+                "metadata_file_name": metadata_file.name if metadata_file else None,
             }
         )
 

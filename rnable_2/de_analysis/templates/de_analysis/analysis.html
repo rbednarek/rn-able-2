@@ -219,7 +219,21 @@ document.getElementById('upload-form').addEventListener('submit', async function
 
         const pcaData = await pcaResponse.json();
 
-        //if (pcaData.success) {
+
+        if (pcaData.success) {
+            updatePlotWithData(pcaData);
+            updateLoadingContainer(
+                uploadData.session_id,
+                uploadData.samples.length,
+                uploadData.gene_count,
+                uploadData.count_file_name,
+                uploadData.metadata_file_name
+            );
+            hideLoading();
+        } else {
+            alert('PCA failed: ' + pcaData.error);
+            hideLoading();
+        }
         //    Run function to update PCA plot here
         //    Overwrite file upload container displaying basic stats ie Session ID, sample #, gene #, Group #,
         //    with option to download CSV with Session, file name info, date created for record keeping
@@ -232,9 +246,147 @@ document.getElementById('upload-form').addEventListener('submit', async function
         hideLoading();
     }
 });
+
+function updatePlotWithData(pcaData) {
+    const traces = [];
+    const customPalette = getComputedStyle(document.documentElement)
+  .getPropertyValue('--plot-colors')
+  .split(',')
+  .map(c => c.trim());
+    if (pcaData.plot_config.metadata && pcaData.plot_config.metadata_columns) {
+        const col1 = pcaData.plot_config.metadata_columns[0];
+        const groups = {};
+
+        pcaData.plot_config.samples.forEach((sample, i) => {
+            const group = pcaData.plot_config.metadata[col1][i];
+            if (!groups[group]) {
+                groups[group] = {samples: [], pc1: [], pc2: []};
+            }
+            groups[group].samples.push(sample);
+            groups[group].pc1.push(pcaData.plot_config.pc1[i]);
+            groups[group].pc2.push(pcaData.plot_config.pc2[i]);
+        });
+
+        Object.entries(groups).forEach(([groupName, groupData]) => {
+            traces.push({
+                x: groupData.pc1,
+                y: groupData.pc2,
+                mode: 'markers',
+                type: 'scatter',
+                name: groupName,
+                text: groupData.samples,
+                marker: {
+                    size: 10,
+                    color: color,
+                    line: {
+                        width: 1,
+                        color: getOutlineColor(color)
+                    }
+                }
+            });
+        });
+    } else {
+        traces.push({
+            x: pcaData.plot_config.pc1,
+            y: pcaData.plot_config.pc2,
+            mode: 'markers',
+            type: 'scatter',
+            text: pcaData.plot_config.samples,
+            marker: {size: 10, color: '#c9ba30ff'}
+        });
+    }
+
+    const layout = {
+        xaxis: {title: `PC1 (${pcaData.pc1_variance.toFixed(2)}%)`},
+        yaxis: {title: `PC2 (${pcaData.pc2_variance.toFixed(2)}%)`},
+        margin: {t: 40, l: 50, r: 20, b: 50},
+        paper_bgcolor: '#0e1111',
+        plot_bgcolor: '#1a1c1c',
+        font: {color: '#fff', family: 'Courier New, monospace'},
+        hovermode: 'closest',
+        dragmode: 'lasso'
+    };
+
+    // Update plot using Plotly.react
+    Plotly.react('scatter-plot', traces, layout);
+}
+
+
+function getOutlineColor(hex) {
+    // Remove '#' and parse RGB
+    const c = hex.startsWith('#') ? hex.slice(1) : hex;
+    const r = parseInt(c.substr(0, 2), 16);
+    const g = parseInt(c.substr(2, 2), 16);
+    const b = parseInt(c.substr(4, 2), 16);
+
+    // Calculate perceived brightness (0–255)
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+
+    // If it's bright (close to white), use black outline, otherwise white
+    return brightness > 220 ? '#000000' : '#ffffff';
+}
+
+function updateLoadingContainer(sessionId, sampleCount, geneCount, countFileName, metadataFileName) {
+    const uploadContainer = document.querySelector('.upload-container');
+
+    const dateTime = new Date().toLocaleString();
+    uploadContainer.innerHTML = `
+        <pre class="ascii-title-small">
+    ____                  ____
+   / __ \___  _______  __/ / /______
+  / /_/ / _ \/ ___/ / / / / __/ ___/
+ / _, _/  __(__  ) /_/ / / /_(__  )
+/_/ |_|\___/____/\__,_/_/\__/____/
+        </pre>
+
+        <div style="color: white;">
+            <p><strong>Session:</strong> ${sessionId}</p>
+            <p><strong>Samples:</strong> ${sampleCount}</p>
+            <p><strong>Genes:</strong> ${geneCount}</p>
+
+            <div class="upload-button">
+                <button type="button" id="download-session" class="info-link upload-trigger">
+                    <img src="/static/images/icons/app_button.png"
+                         alt="Download Icon" class="info-link-img">
+                    <span class="info-link-text">Download Session Info</span>
+                </button>
+            </div>
+        </div>
+    `;
+    const downloadBtn = document.getElementById('download-session');
+    downloadBtn.addEventListener('click', () => {
+        const csvContent =
+`Session ID,${sessionId}
+Samples,${sampleCount}
+Genes,${geneCount}
+Count File,${countFileName || 'N/A'}
+Metadata File,${metadataFileName || 'N/A'}
+Date Created,${dateTime}`;
+
+        // Convert the CSV string into a Blob
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+
+        // Create a temporary URL for it
+        const url = URL.createObjectURL(blob);
+
+        // Create a temporary <a> element to trigger the download
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `session_${sessionId}.csv`);
+        document.body.appendChild(link);
+        link.click();
+
+        // Cleanup
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    });
+}
+
 {% endif %}
 </script>
 
 
 
 {% endblock %} -->
+
+#f7f4f4ff

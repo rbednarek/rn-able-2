@@ -14,3 +14,6 @@ db-make-migrations:
 
 db-migrate:
 	python rnable_2/manage.py migrate
+
+db-flush:
+	python rnable_2/manage.py flush --no-input

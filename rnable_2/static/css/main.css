@@ -583,3 +583,9 @@ input[type="file"] {
   color: #fff;                            /* soft grey or whatever fits */                     /* space between button & filename */
   cursor: default;                        /* normal arrow over text area */
 }
+
+
+/* Color palette */
+:root {
+    --plot-colors: #c9ba30ff, #4CAF50, #85247dff, #1c7c94ff, #8d2a19ff, #503d2aff, #d1495bff, #007f5fff, #6e6e6eff, #fff;
+}
