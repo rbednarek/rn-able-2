@@ -91,6 +91,9 @@
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
 <script>
+
+const csrfToken = document.getElementById('csrf-token').value;
+
 const state = {
     sessionId: '{{ session_id|default:"" }}',
 };
@@ -213,8 +216,10 @@ document.getElementById('upload-form').addEventListener('submit', async function
         // Run PCA
         const pcaResponse = await fetch("{% url 'de_analysis:run_pca' %}", {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({session_id: uploadData.session_id})
+            headers: {'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken},
+            body: JSON.stringify({session_id: uploadData.session_id}),
+            credentials: 'same-origin'
         });
 
         const pcaData = await pcaResponse.json();
@@ -388,5 +393,3 @@ Date Created,${dateTime}`;
 
 
 {% endblock %} -->
-
-#f7f4f4ff

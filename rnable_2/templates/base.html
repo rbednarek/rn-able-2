@@ -14,6 +14,7 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
     {# Logout Button (if authenticated) #}
     {% if user.is_authenticated %}
     <form method="post" action="{% url 'admin:logout' %}" class="logout-form">
