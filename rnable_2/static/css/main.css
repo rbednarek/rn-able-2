@@ -430,6 +430,7 @@ body {
 
 /* Left column - upload container (top) */
 .upload-container {
+    position: relative;
     grid-column: 1;
     grid-row: 1;
     background-color: #0e1111;
@@ -539,9 +540,12 @@ body {
 }
 
 .upload-button {
+    position: absolute;
+    right: 20px;
+    bottom: 10px;
     display: flex;
-    justify-content: flex-end; /* pushes it right */
-    margin-top: 15px;
+    /*justify-content: flex-end; /* pushes it right */
+    /*margin-top: 15px;*/
 }
 
 /* Reset native button look */
@@ -624,4 +628,9 @@ input[type="file"] {
     max-width: 600px; /* keeps square-ish ratio */
     max-height: 600px;
   }
+}
+
+.js-plotly-plot .legend {
+  flex-wrap: wrap !important;
+  justify-content: center !important;
 }

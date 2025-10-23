@@ -81,6 +81,9 @@
 \____/_/   \____/\__,_/ .___/____/
                      /_/
             </pre>
+            {% if not pca_data %}
+            <p style="color: white;">Run PCA before selecting groups for DE Analysis.</p>
+            {% endif %}
         </div>
 </div>
 
@@ -112,14 +115,19 @@ const state = {
         dragmode: 'select',
         showlegend: false,
         /*autosize: true,*/
-        /*legend: {
+        legend: {
             orientation: 'h',
             x: 0,
-            y: -0.15, // Below plot
+            y: -0.2, // Below plot
             xanchor: 'left',
             yanchor: 'top',
-            font: {color: '#fff'},
-        }*/
+            font: {color: '#fff', size: 10},
+            tracegroupgap: 10,
+            itemwidth: 60,
+            itemsizing: 'constant',
+            entrywidth: 60,
+            entrywidthmode: 'pixels'
+        }
     };
 
     const config = {
@@ -207,7 +215,11 @@ const state = {
             xanchor: 'left',
             yanchor: 'top',
             font: {color: '#fff', size: 10},
-            tracegroupgap: 5
+            tracegroupgap: 10,
+            itemwidth: 60,
+            itemsizing: 'constant',
+            entrywidth: 60,
+            entrywidthmode: 'pixels'
         }
     };
 
@@ -352,11 +364,15 @@ function updatePlotWithData(pcaData) {
         legend: {
             orientation: 'h',
             x: 0,
-            y: -0.2,
+            y: -0.2, // Below plot
             xanchor: 'left',
             yanchor: 'top',
             font: {color: '#fff', size: 10},
-            tracegroupgap: 5
+            tracegroupgap: 10,
+            itemwidth: 60,
+            itemsizing: 'constant',
+            entrywidth: 60,
+            entrywidthmode: 'pixels'
         }
     };
 
