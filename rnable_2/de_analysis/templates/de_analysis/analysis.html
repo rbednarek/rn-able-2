@@ -102,16 +102,28 @@ const state = {
     const layout = {
         xaxis: {title: 'PC1'},
         yaxis: {title: 'PC2'},
-        margin: {t: 40, l: 50, r: 20, b: 50},
+        width: 500,
+        height: 500,
+        margin: {t: 40, l: 50, r: 20, b: 120},
         paper_bgcolor: '#0e1111',
         plot_bgcolor: '#0e1111',
         font: {color: '#fff', family: 'Courier New, monospace'},
         hovermode: 'closest',
-        dragmode: 'select'
+        dragmode: 'select',
+        showlegend: false,
+        /*autosize: true,*/
+        /*legend: {
+            orientation: 'h',
+            x: 0,
+            y: -0.15, // Below plot
+            xanchor: 'left',
+            yanchor: 'top',
+            font: {color: '#fff'},
+        }*/
     };
 
     const config = {
-        responsive: true,
+        responsive: false,
         displaylogo:false,
         displayModeBar: true,
         modeBarButtonsToAdd: []
@@ -178,21 +190,25 @@ const state = {
     const layout = {
         xaxis: {title: `PC1 ({{ pca_data.pc1_variance|floatformat:2 }}%)`},
         yaxis: {title: `PC2 ({{ pca_data.pc2_variance|floatformat:2 }}%)`},
-        margin: {t: 40, l: 50, r: 20, b: 50},
+        width: 500,
+        height: 500,
+        margin: {t: 40, l: 50, r: 20, b: 120},
         paper_bgcolor: '#0e1111',
         plot_bgcolor: '#0e1111',
         font: {color: '#fff', family: 'Courier New, monospace'},
         hovermode: 'closest',
         dragmode: 'select',
+        /*autosize: true,*/
+        showlegend: true,
         legend: {
-        orientation: 'h',  // horizontal
-        x: 0,
-        y: -0.2,           // move below plot
-        xanchor: 'left',
-        yanchor: 'top',
-        font: { color: '#fff' },
-        itemwidth: 80
-    }
+            orientation: 'h',
+            x: 0,
+            y: -0.2, // Below plot
+            xanchor: 'left',
+            yanchor: 'top',
+            font: {color: '#fff', size: 10},
+            tracegroupgap: 5
+        }
     };
 
     // Use Plotly.react to update existing plot
@@ -323,21 +339,25 @@ function updatePlotWithData(pcaData) {
     const layout = {
         xaxis: {title: `PC1 (${pcaData.pc1_variance.toFixed(2)}%)`},
         yaxis: {title: `PC2 (${pcaData.pc2_variance.toFixed(2)}%)`},
-        margin: {t: 40, l: 50, r: 20, b: 50},
+        width: 500,
+        height: 500,
+        margin: {t: 40, l: 50, r: 20, b: 120},
         paper_bgcolor: '#0e1111',
         plot_bgcolor: '#0e1111',
         font: {color: '#fff', family: 'Courier New, monospace'},
         hovermode: 'closest',
         dragmode: 'select',
+        /*autosize: true,*/
+        showlegend: true,
         legend: {
-        orientation: 'h',  // horizontal
-        x: 0,
-        y: -0.2,           // move below plot
-        xanchor: 'left',
-        yanchor: 'top',
-        font: { color: '#fff' },
-        itemwidth: 80
-    }
+            orientation: 'h',
+            x: 0,
+            y: -0.2,
+            xanchor: 'left',
+            yanchor: 'top',
+            font: {color: '#fff', size: 10},
+            tracegroupgap: 5
+        }
     };
 
     // Update plot using Plotly.react
@@ -364,13 +384,13 @@ function updateLoadingContainer(sessionId, sampleCount, geneCount, countFileName
 
     const dateTime = new Date().toLocaleString();
     uploadContainer.innerHTML = `
-        <div class="ascii-title-small">
+        <pre class="ascii-title-small">
     ____                  ____
-   / __ \___  _______  __/ / /______
-  / /_/ / _ \/ ___/ / / / / __/ ___/
+   / __ \\___  _______  __/ / /______
+  / /_/ / _ \\/ ___/ / / / / __/ ___/
  / _, _/  __(__  ) /_/ / / /_(__  )
-/_/ |_|\___/____/\__,_/_/\__/____/
-        </div>
+/_/ |_|\\___/____/\\__,_/_/\\__/____/
+        </pre>
 
         <div style="color: white;">
             <p><strong>Session:</strong> ${sessionId}</p>
