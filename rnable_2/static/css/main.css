@@ -223,6 +223,16 @@ body {
     margin-bottom: 20px;
 }
 
+.ascii-wrapper {
+    font-family: 'Courier New', Courier, monospace;
+    white-space: pre;
+    line-height: 1.2;
+    font-size: 12px;
+    color: white;
+    margin-bottom: 20px;
+    width: max-content; /* prevents wrapping */
+}
+
 .forum-sections {
     background-color: #0e1111;
     padding: 20px;
@@ -411,10 +421,11 @@ body {
    ============================================ */
 .de-layout {
     display: grid;
-    grid-template-columns: auto 1fr; /* left column adapts to widest content, right fills remaining */
+    grid-template-columns: 500px 1fr; /* left column adapts to widest content, right fills remaining */
     grid-template-rows: auto 1fr;    /* top = upload, bottom = groups */
     gap: 20px;                       /* horizontal and vertical gap */
     width: 100%;
+    max-width: 100%;
 }
 
 /* Left column - upload container (top) */
@@ -426,6 +437,7 @@ body {
     border-radius: 8px;
     color: white;
     font-family: 'Courier New', Courier, monospace;
+
 }
 
 /* Left column - groups container (bottom) */
@@ -437,7 +449,7 @@ body {
     border-radius: 8px;
     color: white;
     font-family: 'Courier New', Courier, monospace;
-    height: calc(100% - <upload-container-height> - 20px);
+    /*height: calc(100% - <upload-container-height> - 20px);*/
 }
 
 /* Right column - plot container (spans full height) */
@@ -445,11 +457,12 @@ body {
     grid-column: 2;
     grid-row: 1 / 3; /* spans both rows of left column */
     background-color: #0e1111;
-    padding: 20px 40px 20px 20px;
-    box-sizing: border-box;
+    padding: 20px 40px 40px 20px;
     border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    /*overflow: hidden;*/
     min-height: 600px;
-    width: 100%;
 }
 
 
@@ -588,4 +601,19 @@ input[type="file"] {
 /* Color palette */
 :root {
     --plot-colors: #c9ba30ff, #4CAF50, #85247dff, #1c7c94ff, #8d2a19ff, #503d2aff, #d1495bff, #007f5fff, #6e6e6eff, #fff;
+}
+
+
+#scatter-plot {
+  width: 500px;
+  height: 500px;
+}
+
+@media (max-width: 600px) {
+  #scatter-plot {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-width: 600px; /* keeps square-ish ratio */
+    max-height: 600px;
+  }
 }

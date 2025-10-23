@@ -144,7 +144,8 @@ const state = {
             groups[group].pc2.push(plotConfig.pc2[i]);
         });
 
-        Object.entries(groups).forEach(([groupName, groupData]) => {
+        Object.entries(groups).forEach(([groupName, groupData], idx) => {
+            const color = customPalette[idx % customPalette.length];
             traces.push({
                 x: groupData.pc1,
                 y: groupData.pc2,
@@ -152,7 +153,14 @@ const state = {
                 type: 'scatter',
                 name: groupName,
                 text: groupData.samples,
-                marker: {size: 10}
+                marker: {
+                    size: 10,
+                    color: color,
+                    line: {
+                        width: 1,
+                        color: getOutlineColor(color)
+                        }
+                    }
             });
         });
     } else {
@@ -172,10 +180,19 @@ const state = {
         yaxis: {title: `PC2 ({{ pca_data.pc2_variance|floatformat:2 }}%)`},
         margin: {t: 40, l: 50, r: 20, b: 50},
         paper_bgcolor: '#0e1111',
-        plot_bgcolor: '#1a1c1c',
+        plot_bgcolor: '#0e1111',
         font: {color: '#fff', family: 'Courier New, monospace'},
         hovermode: 'closest',
-        dragmode: 'select'
+        dragmode: 'select',
+        legend: {
+        orientation: 'h',  // horizontal
+        x: 0,
+        y: -0.2,           // move below plot
+        xanchor: 'left',
+        yanchor: 'top',
+        font: { color: '#fff' },
+        itemwidth: 80
+    }
     };
 
     // Use Plotly.react to update existing plot
@@ -210,8 +227,7 @@ document.getElementById('upload-form').addEventListener('submit', async function
             hideLoading();
             return;
         }
-        const newURL = `{% url 'de_analysis:de-analysis' %}?session_id=${uploadData.session_id}`;
-        window.history.pushState({session: uploadData.session_id}, '', newURL);
+
 
         // Run PCA
         const pcaResponse = await fetch("{% url 'de_analysis:run_pca' %}", {
@@ -239,6 +255,8 @@ document.getElementById('upload-form').addEventListener('submit', async function
             alert('PCA failed: ' + pcaData.error);
             hideLoading();
         }
+        const newURL = `{% url 'de_analysis:de-analysis' %}?session_id=${uploadData.session_id}`;
+        window.history.pushState({session: uploadData.session_id}, '', newURL);
         //    Run function to update PCA plot here
         //    Overwrite file upload container displaying basic stats ie Session ID, sample #, gene #, Group #,
         //    with option to download CSV with Session, file name info, date created for record keeping
@@ -272,7 +290,8 @@ function updatePlotWithData(pcaData) {
             groups[group].pc2.push(pcaData.plot_config.pc2[i]);
         });
 
-        Object.entries(groups).forEach(([groupName, groupData]) => {
+        Object.entries(groups).forEach(([groupName, groupData], idx) => {
+            const color = customPalette[idx % customPalette.length];
             traces.push({
                 x: groupData.pc1,
                 y: groupData.pc2,
@@ -306,10 +325,19 @@ function updatePlotWithData(pcaData) {
         yaxis: {title: `PC2 (${pcaData.pc2_variance.toFixed(2)}%)`},
         margin: {t: 40, l: 50, r: 20, b: 50},
         paper_bgcolor: '#0e1111',
-        plot_bgcolor: '#1a1c1c',
+        plot_bgcolor: '#0e1111',
         font: {color: '#fff', family: 'Courier New, monospace'},
         hovermode: 'closest',
-        dragmode: 'lasso'
+        dragmode: 'select',
+        legend: {
+        orientation: 'h',  // horizontal
+        x: 0,
+        y: -0.2,           // move below plot
+        xanchor: 'left',
+        yanchor: 'top',
+        font: { color: '#fff' },
+        itemwidth: 80
+    }
     };
 
     // Update plot using Plotly.react
@@ -336,13 +364,13 @@ function updateLoadingContainer(sessionId, sampleCount, geneCount, countFileName
 
     const dateTime = new Date().toLocaleString();
     uploadContainer.innerHTML = `
-        <pre class="ascii-title-small">
+        <div class="ascii-title-small">
     ____                  ____
    / __ \___  _______  __/ / /______
   / /_/ / _ \/ ___/ / / / / __/ ___/
  / _, _/  __(__  ) /_/ / / /_(__  )
 /_/ |_|\___/____/\__,_/_/\__/____/
-        </pre>
+        </div>
 
         <div style="color: white;">
             <p><strong>Session:</strong> ${sessionId}</p>
