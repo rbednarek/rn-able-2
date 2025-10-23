@@ -82,7 +82,7 @@
                      /_/
             </pre>
             {% if not pca_data %}
-            <p style="color: white;">Run PCA before selecting groups for DE Analysis.</p>
+            <p style="color: white;">Run PCA before defining groups for DE Analysis.</p>
             {% endif %}
         </div>
 </div>
@@ -115,19 +115,15 @@ const state = {
         dragmode: 'select',
         showlegend: false,
         /*autosize: true,*/
-        legend: {
+        /*legend: {
             orientation: 'h',
             x: 0,
             y: -0.2, // Below plot
             xanchor: 'left',
             yanchor: 'top',
             font: {color: '#fff', size: 10},
-            tracegroupgap: 10,
-            itemwidth: 60,
-            itemsizing: 'constant',
-            entrywidth: 60,
-            entrywidthmode: 'pixels'
-        }
+            itemwidth:10,
+        }*/
     };
 
     const config = {
@@ -214,12 +210,8 @@ const state = {
             y: -0.2, // Below plot
             xanchor: 'left',
             yanchor: 'top',
-            font: {color: '#fff', size: 10},
-            tracegroupgap: 10,
-            itemwidth: 60,
-            itemsizing: 'constant',
-            entrywidth: 60,
-            entrywidthmode: 'pixels'
+            font: {color: '#fff', size: 8},
+            itemwidth:20,
         }
     };
 
@@ -285,12 +277,8 @@ document.getElementById('upload-form').addEventListener('submit', async function
         }
         const newURL = `{% url 'de_analysis:de-analysis' %}?session_id=${uploadData.session_id}`;
         window.history.pushState({session: uploadData.session_id}, '', newURL);
-        //    Run function to update PCA plot here
-        //    Overwrite file upload container displaying basic stats ie Session ID, sample #, gene #, Group #,
-        //    with option to download CSV with Session, file name info, date created for record keeping
-        //    update groups container to show group assignment options and submit de analysis button
-        //
-        //}
+        //    Add Group Selection here:
+
 
     } catch (error) {
         alert('Error: ' + error.message);
@@ -367,12 +355,8 @@ function updatePlotWithData(pcaData) {
             y: -0.2, // Below plot
             xanchor: 'left',
             yanchor: 'top',
-            font: {color: '#fff', size: 10},
-            tracegroupgap: 10,
-            itemwidth: 60,
-            itemsizing: 'constant',
-            entrywidth: 60,
-            entrywidthmode: 'pixels'
+            font: {color: '#fff', size: 8},
+            itemwidth:20,
         }
     };
 
