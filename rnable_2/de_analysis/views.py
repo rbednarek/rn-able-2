@@ -18,7 +18,7 @@ def analysis_page(request):
     Main DE analysis page
     Loads existing session if session_id provided in URL
     """
-    session_id = request.GET.get("session")
+    session_id = request.GET.get("session_id")
     context = {}
 
     if session_id:

@@ -13,19 +13,10 @@ class PCAResult(models.Model):
         AnalysisSession, on_delete=models.CASCADE, related_name="pca_result"
     )
 
-    # PCA data
-    pca_coordinates = models.JSONField(help_text="PC1, PC2 coordinates for each sample")
-    pc1_variance = models.FloatField(help_text="Variance explained by PC1")
-    pc2_variance = models.FloatField(help_text="Variance explained by PC2")
-
-    # Plotly configuration for reproducibility
-    plot_config = models.JSONField(help_text="Complete Plotly figure configuration")
-
-    # Sample groups (for DE analysis)
-    # group1_samples = models.JSONField(null=True, blank=True)
-    # group2_samples = models.JSONField(null=True, blank=True)
-    # group1_name = models.CharField(max_length=100, null=True, blank=True)
-    # group2_name = models.CharField(max_length=100, null=True, blank=True)
+    pca_coordinates = models.JSONField(help_text="PC1, PC2 coordinates")
+    pc1_variance = models.FloatField()
+    pc2_variance = models.FloatField()
+    plot_config = models.JSONField(help_text="Plotly config")
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -44,8 +35,8 @@ class PCAResult(models.Model):
 
 class DEAnalysisResult(models.Model):
     """
-    Differential expression analysis results
-    Can be generated or uploaded
+    DE analysis results - includes the group definitions
+    Multiple DE analyses can exist for one PCA!
     """
 
     SOURCE_CHOICES = [
@@ -57,26 +48,25 @@ class DEAnalysisResult(models.Model):
         AnalysisSession, on_delete=models.CASCADE, related_name="de_results"
     )
 
-    # Experiment information
-    experiment_tag = models.CharField(
-        max_length=100,
-        blank=True,
+    # ADD: Link to PCA (optional - for tracking which PCA was used)
+    pca_result = models.ForeignKey(
+        PCAResult,
+        on_delete=models.SET_NULL,
         null=True,
-        help_text="Optional tag to link this DE analysis to other datasets",
+        blank=True,
+        related_name="de_analyses",
     )
 
-    # Group information
+    # Group definitions (MOVED from PCAResult)
     control_group = models.CharField(max_length=100)
     treatment_group = models.CharField(max_length=100)
     control_samples = models.JSONField()
     treatment_samples = models.JSONField()
 
     # Results data
-    results_data = models.JSONField(help_text="DE results as JSON")
-    results_csv = models.TextField(help_text="Results as CSV string")
-
-    # Metadata for samples used
-    metadata_csv = models.TextField(blank=True, help_text="Sample metadata CSV")
+    results_data = models.JSONField()
+    results_csv = models.TextField()
+    metadata_csv = models.TextField(blank=True)
 
     # Source tracking
     source = models.CharField(
@@ -84,9 +74,7 @@ class DEAnalysisResult(models.Model):
     )
 
     # Statistics
-    n_significant = models.IntegerField(
-        default=0, help_text="Number of significant genes"
-    )
+    n_significant = models.IntegerField(default=0)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

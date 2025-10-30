@@ -10,7 +10,12 @@ class AnalysisSession(models.Model):
     """
 
     session_id = models.CharField(
-        max_length=100, unique=True, db_index=True, default=uuid.uuid4, editable=False
+        max_length=100,
+        unique=True,
+        db_index=True,
+        default=uuid.uuid4,
+        editable=False,
+        blank=True,
     )
     user = models.ForeignKey(
         User,
@@ -53,3 +58,9 @@ class AnalysisSession(models.Model):
         if self.count_data:
             return len(self.count_data.get("index", []))
         return 0
+
+    def save(self, *args, **kwargs):
+        """Generate session_id if not set"""
+        if not self.session_id:
+            self.session_id = str(uuid.uuid4())[:8]
+        super().save(*args, **kwargs)
