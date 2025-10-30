@@ -11,6 +11,7 @@
 <div class="de-layout">
     <!-- Upload Container -->
     <div class="upload-container">
+        {% if not session_id %}
         <pre class="ascii-title-small">
     _______ __        __  __      __                __
    / ____(_) /__     / / / /___  / /___  ____ _____/ /
@@ -19,7 +20,7 @@
 /_/   /_/_/\___/   \____/ .___/_/\____/\__,_/\__,_/
                        /_/
         </pre>
-        {% if not session_id %}
+
         <form id="upload-form" enctype="multipart/form-data">
             <div class="form-group">
                 <span class="form-label">Count Data:</span>
@@ -42,6 +43,13 @@
             </div>
         </form>
         {% else %}
+        <pre class="ascii-title-small">
+    ____                  ____
+   / __ \___  _______  __/ / /______
+  / /_/ / _ \/ ___/ / / / / __/ ___/
+ / _, _/  __(__  ) /_/ / / /_(__  )
+/_/ |_|\___/____/\__,_/_/\__/____/
+        </pre>
         <!-- Session exists - show session info -->
         <div style="color: white;">
             <p><strong>Session:</strong> <code>{{ session_id }}</code></p>
@@ -55,7 +63,7 @@
                 <span class="info-link-text">Run PCA</span>
             </button>
             {% else %}
-            <p style="margin-top: 15px; color: #4CAF50;">✓ PCA Complete</p>
+            <p style="margin-top: 15px; color: #4CAF50; "><b>✓ PCA Complete</b></p>
             {% endif %}
         </div>
         {% endif %}
@@ -133,24 +141,26 @@
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 
 <script>
+// Updated JavaScript for the template - replace the existing JavaScript block
+
 const csrfToken = '{{ csrf_token }}';
 
 const state = {
     sessionId: '{{ session_id|default:"" }}',
     selectedSamples: [],
-    visibleTraces: [], // Track which traces are visible
+    visibleTraces: [],
     controlGroup: {
-        name: '{{ pca_data.group1_name|default:"" }}',
-        samples: {{ pca_data.group1_samples|default:"[]"|safe }}
+        name: '',
+        samples: []
     },
     treatmentGroup: {
-        name: '{{ pca_data.group2_name|default:"" }}',
-        samples: {{ pca_data.group2_samples|default:"[]"|safe }}
+        name: '',
+        samples: []
     }
 };
 
 // ============================================
-// Utility Functions (Always Available)
+// Utility Functions
 // ============================================
 const customPalette = getComputedStyle(document.documentElement)
     .getPropertyValue('--plot-colors')
@@ -203,7 +213,6 @@ function updatePlotWithData(pcaData) {
             });
         });
 
-        // Track visible traces
         state.visibleTraces = traces.map(t => t.name);
     } else {
         traces.push({
@@ -243,10 +252,8 @@ function updatePlotWithData(pcaData) {
 
     Plotly.react('scatter-plot', traces, layout);
 
-    // Attach legend click handler to track visible traces
     document.getElementById('scatter-plot').on('plotly_restyle', function(data) {
         if (data[0].visible) {
-            // Update visible traces based on legend clicks
             const plotDiv = document.getElementById('scatter-plot');
             state.visibleTraces = plotDiv.data
                 .map((trace, idx) => plotDiv.data[idx].visible !== 'legendonly' ? trace.name : null)
@@ -294,10 +301,17 @@ function updateGroupsContainer() {
                 </button>
                 <div id="treatment-status" style="font-size: 10px; margin-top: 5px; color: #4CAF50;"></div>
             </div>
+
+            <div id="run-de-container" style="margin-top: 20px; display: none;">
+                <button id="run-de-btn" class="info-link">
+                    <img src="/static/images/icons/app_button.png"
+                         alt="Run DE" class="info-link-img">
+                    <span class="info-link-text">Run DE Analysis</span>
+                </button>
+            </div>
         </div>
     `;
 
-    // Reattach event listeners
     attachGroupEventListeners();
 }
 
@@ -350,6 +364,16 @@ Date Created,${dateTime}`;
     });
 }
 
+function checkBothGroupsDefined() {
+    const bothDefined = state.controlGroup.samples.length > 0 &&
+                       state.treatmentGroup.samples.length > 0;
+
+    const runDeContainer = document.getElementById('run-de-container');
+    if (runDeContainer) {
+        runDeContainer.style.display = bothDefined ? 'block' : 'none';
+    }
+}
+
 // ============================================
 // Initialize Empty Plot
 // ============================================
@@ -376,10 +400,8 @@ Date Created,${dateTime}`;
 
     Plotly.newPlot('scatter-plot', [], layout, config);
 
-    // Handle selection events
     document.getElementById('scatter-plot').on('plotly_selected', function(eventData) {
         if (eventData && eventData.points) {
-            // Filter selected points to only include visible traces
             state.selectedSamples = eventData.points
                 .filter(point => {
                     const traceName = point.data.name;
@@ -463,13 +485,12 @@ document.getElementById('upload-form').addEventListener('submit', async function
             updateLoadingContainer(
                 uploadData.session_id,
                 uploadData.samples.length,
-                uploadData.gene_count,
+                uploadData.genes,
                 uploadData.count_file_name,
                 uploadData.metadata_file_name
             );
             updateGroupsContainer();
 
-            // Update URL without query params (cleaner)
             window.history.replaceState({session: uploadData.session_id}, '', '{% url "de_analysis:de-analysis" %}');
 
             hideLoading();
@@ -488,7 +509,7 @@ document.getElementById('upload-form').addEventListener('submit', async function
 // Group Definition Functions
 // ============================================
 function attachGroupEventListeners() {
-    document.getElementById('define-control-btn')?.addEventListener('click', async function() {
+    document.getElementById('define-control-btn')?.addEventListener('click', function() {
         const groupName = document.getElementById('control-group-name').value.trim();
 
         if (!groupName) {
@@ -504,13 +525,13 @@ function attachGroupEventListeners() {
         state.controlGroup.name = groupName;
         state.controlGroup.samples = [...state.selectedSamples];
 
-        await saveGroups();
-
         document.getElementById('control-status').innerHTML =
             `✓ ${groupName}: ${state.selectedSamples.length} samples`;
+
+        checkBothGroupsDefined();
     });
 
-    document.getElementById('define-treatment-btn')?.addEventListener('click', async function() {
+    document.getElementById('define-treatment-btn')?.addEventListener('click', function() {
         const groupName = document.getElementById('treatment-group-name').value.trim();
 
         if (!groupName) {
@@ -526,42 +547,53 @@ function attachGroupEventListeners() {
         state.treatmentGroup.name = groupName;
         state.treatmentGroup.samples = [...state.selectedSamples];
 
-        await saveGroups();
-
         document.getElementById('treatment-status').innerHTML =
             `✓ ${groupName}: ${state.selectedSamples.length} samples`;
+
+        checkBothGroupsDefined();
+    });
+
+    document.getElementById('run-de-btn')?.addEventListener('click', async function() {
+        showLoading('Running DE Analysis...');
+
+        try {
+            const response = await fetch("{% url 'de_analysis:run_de' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    session_id: state.sessionId,
+                    control_group_name: state.controlGroup.name,
+                    treatment_group_name: state.treatmentGroup.name,
+                    control_samples: state.controlGroup.samples,
+                    treatment_samples: state.treatmentGroup.samples
+                }),
+                credentials: 'same-origin'
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                hideLoading();
+                alert(`DE Analysis complete!\n${data.n_significant} significant genes found.`);
+
+                // Redirect to enrichment or show results
+                if (data.enrichment_url) {
+                    window.location.href = data.enrichment_url;
+                }
+            } else {
+                hideLoading();
+                alert('DE Analysis failed: ' + data.error);
+            }
+        } catch (error) {
+            hideLoading();
+            alert('Error: ' + error.message);
+        }
     });
 }
 
-async function saveGroups() {
-    try {
-        const response = await fetch("{% url 'de_analysis:save_groups' %}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify({
-                session_id: state.sessionId,
-                group1_samples: state.controlGroup.samples,
-                group2_samples: state.treatmentGroup.samples,
-                group1_name: state.controlGroup.name,
-                group2_name: state.treatmentGroup.name
-            }),
-            credentials: 'same-origin'
-        });
-
-        const data = await response.json();
-
-        if (!data.success) {
-            console.error('Failed to save groups');
-        }
-    } catch (error) {
-        console.error('Error saving groups:', error);
-    }
-}
-
-// Attach event listeners on page load if groups container exists
 {% if pca_data %}
 attachGroupEventListeners();
 {% endif %}
