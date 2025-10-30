@@ -18,7 +18,7 @@ def analysis_page(request):
     Main DE analysis page
     Loads existing session if session_id provided in URL
     """
-    session_id = request.GET.get("session_id")
+    session_id = request.GET.get("session_id") or request.GET.get("session")
     context = {}
 
     if session_id:
@@ -35,10 +35,6 @@ def analysis_page(request):
                     "plot_config": pca.plot_config,
                     "pc1_variance": pca.pc1_variance,
                     "pc2_variance": pca.pc2_variance,
-                    # 'group1_samples': pca.group1_samples,
-                    # 'group2_samples': pca.group2_samples,
-                    # 'group1_name': pca.group1_name,
-                    # 'group2_name': pca.group2_name,
                 }
 
             # Load DE results if exist
@@ -139,7 +135,7 @@ def run_pca_analysis(request):
             col1 = meta_df.columns[0] if len(meta_df.columns) > 0 else None
             col2 = meta_df.columns[1] if len(meta_df.columns) > 1 else None
 
-        # Run PCA (import your analysis module)
+        # Run PCA
         pca_df, pc1_var, pc2_var = plot_count_pca(
             count_df=count_df, plot=False, meta_df=meta_df, col1=col1, col2=col2
         )
@@ -172,40 +168,40 @@ def run_pca_analysis(request):
 
 
 @require_http_methods(["POST"])
-def save_groups(request):
-    """
-    Save selected sample groups from PCA plot
-    """
-    try:
-        data = json.loads(request.body)
-        session_id = data.get("session_id")
-
-        session = get_object_or_404(AnalysisSession, session_id=session_id)
-        pca_result = get_object_or_404(PCAResult, session=session)
-
-        pca_result.group1_samples = data.get("group1_samples", [])
-        pca_result.group2_samples = data.get("group2_samples", [])
-        pca_result.group1_name = data.get("group1_name", "")
-        pca_result.group2_name = data.get("group2_name", "")
-        pca_result.save()
-
-        return JsonResponse({"success": True})
-
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
-
-
-@require_http_methods(["POST"])
 def run_de_analysis_api(request):
     """
     Run differential expression analysis
+    Groups are now passed in the request body instead of loaded from PCA
     """
     try:
         data = json.loads(request.body)
         session_id = data.get("session_id")
 
+        # Get group definitions from request
+        control_group_name = data.get("control_group_name")
+        treatment_group_name = data.get("treatment_group_name")
+        control_samples = data.get("control_samples", [])
+        treatment_samples = data.get("treatment_samples", [])
+
+        # Validate inputs
+        if not all(
+            [
+                control_group_name,
+                treatment_group_name,
+                control_samples,
+                treatment_samples,
+            ]
+        ):
+            return JsonResponse(
+                {"error": "Missing required group information"}, status=400
+            )
+
         session = get_object_or_404(AnalysisSession, session_id=session_id)
-        pca_result = get_object_or_404(PCAResult, session=session)
+
+        # Get PCA result if it exists (optional - for linking)
+        pca_result = None
+        if hasattr(session, "pca_result"):
+            pca_result = session.pca_result
 
         # Load data
         count_df = pd.DataFrame(
@@ -214,46 +210,57 @@ def run_de_analysis_api(request):
             columns=session.count_data["columns"],
         )
 
-        meta_df = pd.DataFrame(
-            data=session.metadata["data"],
-            index=session.metadata["index"],
-            columns=session.metadata["columns"],
+        meta_df = (
+            pd.DataFrame(
+                data=session.metadata["data"],
+                index=session.metadata["index"],
+                columns=session.metadata["columns"],
+            )
+            if session.metadata
+            else None
         )
 
         # Filter to selected samples
-        all_samples = pca_result.group1_samples + pca_result.group2_samples
+        all_samples = control_samples + treatment_samples
         count_filtered = count_df[all_samples]
-        meta_filtered = meta_df.loc[all_samples].copy()
+
+        # Create metadata with group assignments
+        if meta_df is not None:
+            meta_filtered = meta_df.loc[all_samples].copy()
+        else:
+            # Create minimal metadata if none exists
+            meta_filtered = pd.DataFrame(index=all_samples)
 
         # Add group column
         meta_filtered["group"] = ""
-        for sample in pca_result.group1_samples:
-            meta_filtered.at[sample, "group"] = pca_result.group1_name
-        for sample in pca_result.group2_samples:
-            meta_filtered.at[sample, "group"] = pca_result.group2_name
+        for sample in control_samples:
+            meta_filtered.at[sample, "group"] = control_group_name
+        for sample in treatment_samples:
+            meta_filtered.at[sample, "group"] = treatment_group_name
 
-        # Run DE analysis (import your analysis module)
+        # Run DE analysis
         results_df = run_de_analysis(
             count_filtered,
             meta_filtered,
-            pca_result.group1_name,
-            pca_result.group2_name,
+            control_group_name,
+            treatment_group_name,
         )
 
-        # Save results
+        # Save results with group definitions
         de_result = DEAnalysisResult.objects.create(
             session=session,
-            control_group=pca_result.group1_name,
-            treatment_group=pca_result.group2_name,
-            control_samples=pca_result.group1_samples,
-            treatment_samples=pca_result.group2_samples,
+            pca_result=pca_result,  # Link to PCA if it exists
+            control_group=control_group_name,
+            treatment_group=treatment_group_name,
+            control_samples=control_samples,
+            treatment_samples=treatment_samples,
             results_data=results_df.to_dict(orient="split"),
             results_csv=results_df.to_csv(),
             metadata_csv=meta_filtered.to_csv(),
             source="generated",
         )
 
-        # Remove this once we decide to keep raw count data for session
+        # Remove count data once DE is complete (optional cleanup)
         if session.de_results.exists():
             session.count_data = None
             session.save()
