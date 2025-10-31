@@ -378,10 +378,10 @@ function updateLoadingContainer(sessionId, sampleCount, geneCount, countFileName
             <p><strong>Session:</strong> <code>${sessionId}</code></p>
             <p><strong>Samples:</strong> ${sampleCount}</p>
             <p><strong>Genes:</strong> ${geneCount}</p>
-            <p style="margin-top: 15px; color: #4CAF50; "><b>✓ PCA Complete</b></p>
+
             <p id="control-group-line" style="display: none;"><strong>Control Group:</strong> <span id="control-group-name-display"></span></p>
             <p id="treatment-group-line" style="display: none;"><strong>Treatment Group:</strong> <span id="treatment-group-name-display"></span></p>
-
+            <p style="margin-top: 15px; color: #4CAF50; "><b>✓ PCA Complete</b></p>
             <div class="upload-button">
                 <button type="button" id="download-session" class="info-link upload-trigger">
                     <img src="/static/images/icons/app_button.png"
@@ -557,7 +557,6 @@ document.getElementById('upload-form').addEventListener('submit', async function
     }
 });
 
-// Native file inputs will display filename; truncated via CSS
 {% endif %}
 
 // ============================================

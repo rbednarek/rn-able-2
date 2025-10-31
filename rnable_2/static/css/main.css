@@ -641,7 +641,7 @@ input[type="file"] {
   max-width: 70%;           /* prevent running into the Run PCA button */
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+  text-overflow: ellipsis;  /* browser may use middle-ellipsis */
   vertical-align: middle;
 }
 
