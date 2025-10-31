@@ -64,6 +64,14 @@
             </button>
             {% else %}
             <p style="margin-top: 15px; color: #4CAF50; "><b>✓ PCA Complete</b></p>
+            <div id="group-summary" style="font-size: 11px; margin-top: 8px;"></div>
+            <div class="upload-button">
+                <button type="button" id="download-session" class="info-link upload-trigger">
+                    <img src="{% static 'images/icons/app_button.png' %}"
+                         alt="Download Icon" class="info-link-img">
+                    <span class="info-link-text">Download Session Info</span>
+                </button>
+            </div>
             {% endif %}
         </div>
         {% endif %}
@@ -157,6 +165,7 @@ const state = {
     sessionId: '{{ session_id|default:"" }}',
     selectedSamples: [],
     visibleTraces: [],
+    pcaSamples: [],
     controlGroup: {
         name: '',
         samples: []
@@ -259,6 +268,10 @@ function updatePlotWithData(pcaData) {
     };
 
     Plotly.react('scatter-plot', traces, layout);
+    // keep sample ids in state for CSV export
+    if (pcaData.plot_config && pcaData.plot_config.samples) {
+        state.pcaSamples = pcaData.plot_config.samples.slice();
+    }
 
     document.getElementById('scatter-plot').on('plotly_restyle', function(data) {
         if (data[0].visible) {
@@ -361,24 +374,13 @@ function updateLoadingContainer(sessionId, sampleCount, geneCount, countFileName
         </div>
     `;
 
-    const downloadBtn = document.getElementById('download-session');
-    downloadBtn.addEventListener('click', () => {
-        const csvContent = `Session ID,${sessionId}
-Samples,${sampleCount}
-Genes,${geneCount}
-Count File,${countFileName || 'N/A'}
-Metadata File,${metadataFileName || 'N/A'}
-Date Created,${dateTime}`;
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.setAttribute('href', url);
-        link.setAttribute('download', `session_${sessionId}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+    attachDownloadHandler({
+        sessionId,
+        sampleCount,
+        geneCount,
+        countFileName,
+        metadataFileName,
+        dateTime
     });
 }
 
@@ -390,6 +392,7 @@ function checkBothGroupsDefined() {
     if (runDeContainer) {
         runDeContainer.style.display = bothDefined ? 'block' : 'none';
     }
+    updateGroupSummary();
 }
 
 // ============================================
@@ -551,6 +554,7 @@ function attachGroupEventListeners() {
             `✓ ${groupName}: ${state.selectedSamples.length} samples`;
 
         checkBothGroupsDefined();
+        updateGroupSummary();
     });
 
     document.getElementById('define-treatment-btn')?.addEventListener('click', function() {
@@ -573,6 +577,7 @@ function attachGroupEventListeners() {
             `✓ ${groupName}: ${state.selectedSamples.length} samples`;
 
         checkBothGroupsDefined();
+        updateGroupSummary();
     });
 
     document.getElementById('run-de-btn')?.addEventListener('click', async function() {
@@ -616,8 +621,59 @@ function attachGroupEventListeners() {
     });
 }
 
+function updateGroupSummary() {
+    const summaryEl = document.getElementById('group-summary');
+    if (!summaryEl) return;
+    const control = state.controlGroup.name ? `Control Group: ${state.controlGroup.name}` : '';
+    const treatment = state.treatmentGroup.name ? `Treatment Group: ${state.treatmentGroup.name}` : '';
+    const parts = [control, treatment].filter(Boolean);
+    summaryEl.textContent = parts.join(' | ');
+}
+
+function attachDownloadHandler(meta) {
+    const btn = document.getElementById('download-session');
+    if (!btn) return;
+    const sessionId = meta?.sessionId || state.sessionId;
+    const sampleCount = meta?.sampleCount || (state.pcaSamples?.length || '');
+    const geneCount = meta?.geneCount || '';
+    const countFileName = meta?.countFileName || '';
+    const metadataFileName = meta?.metadataFileName || '';
+    const dateTime = meta?.dateTime || new Date().toLocaleString();
+
+    btn.addEventListener('click', () => {
+        const samplesCsv = (state.pcaSamples || []).join(',');
+        const controlCsv = (state.controlGroup.samples || []).join(',');
+        const treatmentCsv = (state.treatmentGroup.samples || []).join(',');
+
+        const csvContent = `Session ID,${sessionId}
+Samples,${sampleCount}
+Genes,${geneCount}
+Count File,${countFileName || 'N/A'}
+Metadata File,${metadataFileName || 'N/A'}
+Date Created,${dateTime}
+Samples,${samplesCsv}
+Control Group Name,${state.controlGroup.name || 'N/A'}
+Control Samples,${controlCsv || 'N/A'}
+Treatment Group Name,${state.treatmentGroup.name || 'N/A'}
+Treatment Samples,${treatmentCsv || 'N/A'}`;
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `session_${sessionId}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    });
+}
+
 {% if pca_data %}
 attachGroupEventListeners();
+// attach download handler on initial load (pca_data present)
+attachDownloadHandler();
+updateGroupSummary();
 {% endif %}
 </script>
 {% endblock %}
