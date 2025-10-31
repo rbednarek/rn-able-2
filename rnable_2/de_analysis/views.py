@@ -36,6 +36,9 @@ def analysis_page(request):
                     "pc1_variance": pca.pc1_variance,
                     "pc2_variance": pca.pc2_variance,
                 }
+                # Expose filenames for client-side export
+                context["count_file_name"] = session.count_file_name or ""
+                context["metadata_file_name"] = session.metadata_file_name or ""
 
             # Load DE results if exist
             if session.de_results.exists():
@@ -62,9 +65,13 @@ def upload_data(request):
     try:
         count_file = request.FILES.get("count_file")
         metadata_file = request.FILES.get("metadata_file")
+        experiment_name = request.POST.get("experiment_name", "").strip()
 
         if not count_file:
             return JsonResponse({"error": "Count file required"}, status=400)
+
+        if not experiment_name:
+            return JsonResponse({"error": "Experiment name required"}, status=400)
 
         # Parse count data
         count_df = parse_uploaded_file(count_file)
@@ -87,6 +94,9 @@ def upload_data(request):
             count_data=count_df.to_dict(orient="split"),
             metadata=meta_df.to_dict(orient="split") if meta_df is not None else None,
             user=request.user if request.user.is_authenticated else None,
+            name=experiment_name,
+            count_file_name=count_file.name,
+            metadata_file_name=metadata_file.name if metadata_file else "",
         )
 
         return JsonResponse(
@@ -98,6 +108,7 @@ def upload_data(request):
                 "genes": len(count_df),
                 "count_file_name": count_file.name,
                 "metadata_file_name": metadata_file.name if metadata_file else None,
+                "experiment_name": experiment_name,
             }
         )
 

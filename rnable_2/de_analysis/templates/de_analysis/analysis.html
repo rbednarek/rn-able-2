@@ -22,6 +22,12 @@
         </pre>
 
         <form id="upload-form" enctype="multipart/form-data">
+            <div class="form-group experiment-name-group" style="margin-bottom: 15px;">
+                <span class="form-label">Experiment Name:</span>
+                <input type="text" id="experiment-name" name="experiment_name"
+                    placeholder="e.g., EXP25-1234"
+                    style="width: 50%; padding: 5px; font-size: 12px; font-family: 'Courier New', monospace;">
+            </div>
             <div class="form-group">
                 <span class="form-label">Count Data:</span>
                 <input type="file" id="count-file" name="count_file"
@@ -52,6 +58,7 @@
         </pre>
         <!-- Session exists - show session info -->
         <div style="color: white;">
+            <p><strong>Experiment:</strong> {{ session.name }}</p>
             <p><strong>Session:</strong> <code>{{ session_id }}</code></p>
             <p><strong>Samples:</strong> {{ session.get_sample_count }}</p>
             <p><strong>Genes:</strong> {{ session.get_gene_count }}</p>
@@ -63,8 +70,9 @@
                 <span class="info-link-text">Run PCA</span>
             </button>
             {% else %}
+            <p id="control-group-line" style="display: none;"><strong>Control Group:</strong> <span id="control-group-name-display"></span></p>
+            <p id="treatment-group-line" style="display: none;"><strong>Treatment Group:</strong> <span id="treatment-group-name-display"></span></p>
             <p style="margin-top: 15px; color: #4CAF50; "><b>✓ PCA Complete</b></p>
-            <div id="group-summary" style="font-size: 11px; margin-top: 8px;"></div>
             <div class="upload-button">
                 <button type="button" id="download-session" class="info-link upload-trigger">
                     <img src="{% static 'images/icons/app_button.png' %}"
@@ -160,12 +168,15 @@
 // Updated JavaScript for the template - replace the existing JavaScript block
 
 const csrfToken = '{{ csrf_token }}';
+const initialCountFileName = '{{ count_file_name|default:"" }}';
+const initialMetadataFileName = '{{ metadata_file_name|default:"" }}';
 
 const state = {
     sessionId: '{{ session_id|default:"" }}',
     selectedSamples: [],
     visibleTraces: [],
     pcaSamples: [],
+    experimentName: '{{ session.name|default:"" }}',
     controlGroup: {
         name: '',
         samples: []
@@ -346,9 +357,12 @@ function updateGroupsContainer() {
     attachGroupEventListeners();
 }
 
-function updateLoadingContainer(sessionId, sampleCount, geneCount, countFileName, metadataFileName) {
+function updateLoadingContainer(sessionId, sampleCount, geneCount, countFileName, metadataFileName, experimentName) {
     const uploadContainer = document.querySelector('.upload-container');
     const dateTime = new Date().toLocaleString();
+    if (experimentName) {
+        state.experimentName = experimentName;
+    }
 
     uploadContainer.innerHTML = `
         <pre class="ascii-title-small">
@@ -360,9 +374,13 @@ function updateLoadingContainer(sessionId, sampleCount, geneCount, countFileName
         </pre>
 
         <div style="color: white;">
+            <p><strong>Experiment:</strong> ${state.experimentName || ''}</p>
             <p><strong>Session:</strong> <code>${sessionId}</code></p>
             <p><strong>Samples:</strong> ${sampleCount}</p>
             <p><strong>Genes:</strong> ${geneCount}</p>
+            <p style="margin-top: 15px; color: #4CAF50; "><b>✓ PCA Complete</b></p>
+            <p id="control-group-line" style="display: none;"><strong>Control Group:</strong> <span id="control-group-name-display"></span></p>
+            <p id="treatment-group-line" style="display: none;"><strong>Treatment Group:</strong> <span id="treatment-group-name-display"></span></p>
 
             <div class="upload-button">
                 <button type="button" id="download-session" class="info-link upload-trigger">
@@ -380,8 +398,10 @@ function updateLoadingContainer(sessionId, sampleCount, geneCount, countFileName
         geneCount,
         countFileName,
         metadataFileName,
-        dateTime
+        dateTime,
+        experimentName: state.experimentName || ''
     });
+    updateGroupSummary();
 }
 
 function checkBothGroupsDefined() {
@@ -459,6 +479,7 @@ document.getElementById('upload-form').addEventListener('submit', async function
     e.preventDefault();
 
     const formData = new FormData();
+    const experimentName = document.getElementById('experiment-name').value.trim();
     const countFile = document.getElementById('count-file').files[0];
     const metadataFile = document.getElementById('metadata-file').files[0];
 
@@ -467,7 +488,13 @@ document.getElementById('upload-form').addEventListener('submit', async function
         return;
     }
 
+    if (!experimentName) {
+        alert('Please enter an experiment name');
+        return;
+    }
+
     formData.append('count_file', countFile);
+    formData.append('experiment_name', experimentName);
     if (metadataFile) {
         formData.append('metadata_file', metadataFile);
     }
@@ -508,7 +535,8 @@ document.getElementById('upload-form').addEventListener('submit', async function
                 uploadData.samples.length,
                 uploadData.genes,
                 uploadData.count_file_name,
-                uploadData.metadata_file_name
+                uploadData.metadata_file_name,
+                uploadData.experiment_name
             );
             updateGroupsContainer();
 
@@ -528,6 +556,8 @@ document.getElementById('upload-form').addEventListener('submit', async function
         hideLoading();
     }
 });
+
+// Native file inputs will display filename; truncated via CSS
 {% endif %}
 
 // ============================================
@@ -622,12 +652,28 @@ function attachGroupEventListeners() {
 }
 
 function updateGroupSummary() {
-    const summaryEl = document.getElementById('group-summary');
-    if (!summaryEl) return;
-    const control = state.controlGroup.name ? `Control Group: ${state.controlGroup.name}` : '';
-    const treatment = state.treatmentGroup.name ? `Treatment Group: ${state.treatmentGroup.name}` : '';
-    const parts = [control, treatment].filter(Boolean);
-    summaryEl.textContent = parts.join(' | ');
+    const controlLine = document.getElementById('control-group-line');
+    const controlName = document.getElementById('control-group-name-display');
+    const treatmentLine = document.getElementById('treatment-group-line');
+    const treatmentName = document.getElementById('treatment-group-name-display');
+
+    if (controlLine && controlName) {
+        if (state.controlGroup.name) {
+            controlName.textContent = state.controlGroup.name;
+            controlLine.style.display = '';
+        } else {
+            controlLine.style.display = 'none';
+        }
+    }
+
+    if (treatmentLine && treatmentName) {
+        if (state.treatmentGroup.name) {
+            treatmentName.textContent = state.treatmentGroup.name;
+            treatmentLine.style.display = '';
+        } else {
+            treatmentLine.style.display = 'none';
+        }
+    }
 }
 
 function attachDownloadHandler(meta) {
@@ -636,16 +682,22 @@ function attachDownloadHandler(meta) {
     const sessionId = meta?.sessionId || state.sessionId;
     const sampleCount = meta?.sampleCount || (state.pcaSamples?.length || '');
     const geneCount = meta?.geneCount || '';
-    const countFileName = meta?.countFileName || '';
-    const metadataFileName = meta?.metadataFileName || '';
+    const countFileName = meta?.countFileName || initialCountFileName || '';
+    const metadataFileName = meta?.metadataFileName || initialMetadataFileName || '';
     const dateTime = meta?.dateTime || new Date().toLocaleString();
+    const expName = meta?.experimentName || state.experimentName || '';
+
+    function sanitizeName(name) {
+        return (name || '').toString().trim().replace(/\s+/g, '_').replace(/[^A-Za-z0-9_\-]+/g, '');
+    }
 
     btn.addEventListener('click', () => {
         const samplesCsv = (state.pcaSamples || []).join(',');
         const controlCsv = (state.controlGroup.samples || []).join(',');
         const treatmentCsv = (state.treatmentGroup.samples || []).join(',');
 
-        const csvContent = `Session ID,${sessionId}
+        const csvContent = `Experiment Name,${expName}
+Session ID,${sessionId}
 Samples,${sampleCount}
 Genes,${geneCount}
 Count File,${countFileName || 'N/A'}
@@ -661,7 +713,8 @@ Treatment Samples,${treatmentCsv || 'N/A'}`;
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.setAttribute('href', url);
-        link.setAttribute('download', `session_${sessionId}.csv`);
+        const base = sanitizeName(expName) ? `${sanitizeName(expName)}_${sessionId}` : `session_${sessionId}`;
+        link.setAttribute('download', `${base}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

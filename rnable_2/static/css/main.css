@@ -491,6 +491,22 @@ body {
     color: white;
 }
 
+/* Align labels above inputs in upload container and add consistent spacing */
+.upload-container .form-label {
+    display: block; /* labels above by default */
+    margin-bottom: 6px;
+}
+
+/* Make only the Experiment Name row inline */
+.upload-container .experiment-name-group .form-label {
+    display: inline-block;
+    margin-bottom: 0;
+}
+.upload-container .experiment-name-group input[type="text"] {
+    display: inline-block;
+    vertical-align: middle;
+}
+
 /* Responsive - stack on smaller screens */
 @media (max-width: 1024px) {
     .de-layout {
@@ -530,14 +546,16 @@ body {
 }
 
 .file-name {
-  height: 5px; /* reserve space to prevent shifting */
-  margin-top: 4px;
+  margin-top: 6px;
   margin-left: 5px;
   font-size: 13px;
   font-family: monospace;
-  text-align: right;
+  text-align: left;
   color: #ddd;
-  white-space: nowrap;
+  white-space: nowrap;      /* single line */
+  overflow: hidden;         /* hide overflow */
+  text-overflow: ellipsis;  /* show ellipsis */
+  max-width: 40ch;          /* truncate around ~40 characters */
 }
 
 .upload-button {
@@ -615,6 +633,16 @@ input[type="file"] {
   font-family: 'Courier New', monospace;  /* make text Courier */
   color: #fff;                            /* soft grey or whatever fits */                     /* space between button & filename */
   cursor: default;                        /* normal arrow over text area */
+}
+
+/* Truncate native filename label to ellipsis without extra display elements */
+.upload-container input[type="file"] {
+  display: inline-block;
+  max-width: 70%;           /* prevent running into the Run PCA button */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
 }
 
 

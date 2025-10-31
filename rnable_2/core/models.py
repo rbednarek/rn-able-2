@@ -29,6 +29,10 @@ class AnalysisSession(models.Model):
     count_data = models.JSONField(help_text="Count matrix data")
     metadata = models.JSONField(null=True, blank=True, help_text="Sample metadata")
 
+    # Uploaded file names (for reporting/exports)
+    count_file_name = models.CharField(max_length=255, blank=True, default="")
+    metadata_file_name = models.CharField(max_length=255, blank=True, default="")
+
     # Session info
     name = models.CharField(max_length=200, blank=True)
     description = models.TextField(blank=True)
