@@ -100,39 +100,47 @@
 
             <div class="form-group" style="margin-bottom: 15px;">
                 <input type="text" id="control-group-name"
-                       placeholder="Control group name"
-                       value="{{ pca_data.group1_name|default:'' }}"
-                       style="width: 100%; padding: 5px; font-size: 12px; font-family: 'Courier New', monospace;">
-                <button id="define-control-btn" class="info-link" style="margin-top: 5px; font-size: 12px;">
-                    <img src="{% static 'images/icons/app_button.png' %}"
-                         alt="Define" class="info-link-img" style="width: 24px; height: 24px;">
-                    <span class="info-link-text">Define Control</span>
-                </button>
-                <div id="control-status" style="font-size: 10px; margin-top: 5px; color: #4CAF50;">
-                    {% if pca_data.group1_samples %}
-                    ✓ {{ pca_data.group1_name }}: {{ pca_data.group1_samples|length }} samples
-                    {% endif %}
+                    placeholder="Control group name"
+                    style="width: 100%; padding: 5px; font-size: 12px; font-family: 'Courier New', monospace;">
+                <div class="inline-action-row">
+                    <div class="small-button">
+                        <button id="define-control-btn" class="small-trigger">
+                            <img src="{% static 'images/icons/app_button.png' %}"
+                                alt="Define Control" class="info-link-img">
+                            <span class="info-link-text">Define Control</span>
+                        </button>
+                    </div>
+                    <div id="control-status" style="font-size: 10px; color: #4CAF50;"></div>
                 </div>
             </div>
 
             <div class="form-group">
                 <input type="text" id="treatment-group-name"
-                       placeholder="Treatment group name"
-                       value="{{ pca_data.group2_name|default:'' }}"
-                       style="width: 100%; padding: 5px; font-size: 12px; font-family: 'Courier New', monospace;">
-                <button id="define-treatment-btn" class="info-link" style="margin-top: 5px; font-size: 12px;">
-                    <img src="{% static 'images/icons/app_button.png' %}"
-                         alt="Define" class="info-link-img" style="width: 24px; height: 24px;">
-                    <span class="info-link-text">Define Treatment</span>
-                </button>
-                <div id="treatment-status" style="font-size: 10px; margin-top: 5px; color: #4CAF50;">
-                    {% if pca_data.group2_samples %}
-                    ✓ {{ pca_data.group2_name }}: {{ pca_data.group2_samples|length }} samples
-                    {% endif %}
+                    placeholder="Treatment group name"
+                    style="width: 100%; padding: 5px; font-size: 12px; font-family: 'Courier New', monospace;">
+                <div class="inline-action-row">
+                    <div class="small-button">
+                        <button id="define-treatment-btn" class="small-trigger">
+                            <img src="{% static 'images/icons/app_button.png' %}"
+                                alt="Define Treatment" class="info-link-img">
+                            <span class="info-link-text">Define Treatment</span>
+                        </button>
+                    </div>
+                    <div id="treatment-status" style="font-size: 10px; color: #4CAF50;"></div>
+                </div>
+            </div>
+
+            <div id="run-de-container" style="display: none;">
+                <div class="group-action-button">
+                    <button id="run-de-btn" class="info-link">
+                        <img src="{% static 'images/icons/app_button.png' %}"
+                            alt="Run DE Analysis" class="info-link-img">
+                        <span class="info-link-text">Run DE Analysis</span>
+                    </button>
                 </div>
             </div>
         </div>
-        {% endif %}
+    {% endif %}
     </div>
 </div>
 {% endblock %}
@@ -281,12 +289,16 @@ function updateGroupsContainer() {
                        placeholder="Control group name"
                        value="${state.controlGroup.name}"
                        style="width: 100%; padding: 5px; font-size: 12px; font-family: 'Courier New', monospace;">
-                <button id="define-control-btn" class="info-link" style="margin-top: 5px; font-size: 12px;">
-                    <img src="/static/images/icons/app_button.png"
-                         alt="Define" class="info-link-img" style="width: 24px; height: 24px;">
-                    <span class="info-link-text">Define Control</span>
-                </button>
-                <div id="control-status" style="font-size: 10px; margin-top: 5px; color: #4CAF50;"></div>
+                <div class="inline-action-row">
+                    <div class="small-button">
+                        <button id="define-control-btn" class="small-trigger">
+                            <img src="/static/images/icons/app_button.png"
+                                 alt="Define Control" class="info-link-img">
+                            <span class="info-link-text">Define Control</span>
+                        </button>
+                    </div>
+                    <div id="control-status" style="font-size: 10px; color: #4CAF50;"></div>
+                </div>
             </div>
 
             <div class="form-group">
@@ -294,12 +306,16 @@ function updateGroupsContainer() {
                        placeholder="Treatment group name"
                        value="${state.treatmentGroup.name}"
                        style="width: 100%; padding: 5px; font-size: 12px; font-family: 'Courier New', monospace;">
-                <button id="define-treatment-btn" class="info-link" style="margin-top: 5px; font-size: 12px;">
-                    <img src="/static/images/icons/app_button.png"
-                         alt="Define" class="info-link-img" style="width: 24px; height: 24px;">
-                    <span class="info-link-text">Define Treatment</span>
-                </button>
-                <div id="treatment-status" style="font-size: 10px; margin-top: 5px; color: #4CAF50;"></div>
+                <div class="inline-action-row">
+                    <div class="small-button">
+                        <button id="define-treatment-btn" class="small-trigger">
+                            <img src="/static/images/icons/app_button.png"
+                                 alt="Define Treatment" class="info-link-img">
+                            <span class="info-link-text">Define Treatment</span>
+                        </button>
+                    </div>
+                    <div id="treatment-status" style="font-size: 10px; color: #4CAF50;"></div>
+                </div>
             </div>
 
             <div id="run-de-container" style="margin-top: 20px; display: none;">
@@ -491,7 +507,11 @@ document.getElementById('upload-form').addEventListener('submit', async function
             );
             updateGroupsContainer();
 
-            window.history.replaceState({session: uploadData.session_id}, '', '{% url "de_analysis:de-analysis" %}');
+            window.history.replaceState(
+                {session: uploadData.session_id},
+                '',
+                '{% url "de_analysis:de-analysis" %}?session_id=' + encodeURIComponent(uploadData.session_id)
+            );
 
             hideLoading();
         } else {

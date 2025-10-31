@@ -611,7 +611,7 @@ input[type="file"] {
 
 
 /* Color palette */
-:root {
+ :root {
     --plot-colors: #c9ba30ff, #4CAF50, #85247dff, #1c7c94ff, #8d2a19ff, #503d2aff, #d1495bff, #007f5fff, #6e6e6eff, #fff;
 }
 
@@ -633,4 +633,50 @@ input[type="file"] {
 .js-plotly-plot .legend {
   flex-wrap: wrap !important;
   justify-content: center !important;
+}
+
+
+/* Smaller buttons for groups selections currently */
+
+.small-button {
+    display: inline-block;
+    margin: 4px;
+}
+
+.inline-action-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+    flex-wrap: nowrap;
+}
+
+button.small-trigger,
+.groups-container .small-trigger {
+    background-color: #0e1111;
+    color: white;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 12px;
+    padding: 4px 8px;
+    gap: 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: none;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: background-color 0.2s ease;
+}
+
+.small-trigger:hover {
+    background-color: #1a1c1c;
+}
+
+/* Consistent small icon sizing for group buttons to avoid layout jumps */
+.small-trigger .info-link-img {
+    width: 20px;
+    height: 20px;
 }
