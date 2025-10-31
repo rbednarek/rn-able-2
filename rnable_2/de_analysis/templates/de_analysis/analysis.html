@@ -132,7 +132,7 @@
 
             <div id="run-de-container" style="display: none;">
                 <div class="group-action-button">
-                    <button id="run-de-btn" class="info-link">
+                    <button id="run-de-btn" class="info-link upload-trigger">
                         <img src="{% static 'images/icons/app_button.png' %}"
                             alt="Run DE Analysis" class="info-link-img">
                         <span class="info-link-text">Run DE Analysis</span>
@@ -318,12 +318,14 @@ function updateGroupsContainer() {
                 </div>
             </div>
 
-            <div id="run-de-container" style="margin-top: 20px; display: none;">
-                <button id="run-de-btn" class="info-link">
-                    <img src="/static/images/icons/app_button.png"
-                         alt="Run DE" class="info-link-img">
-                    <span class="info-link-text">Run DE Analysis</span>
-                </button>
+            <div id="run-de-container" style="display: none;">
+                <div class="group-action-button">
+                    <button id="run-de-btn" class="info-link upload-trigger">
+                        <img src="/static/images/icons/app_button.png"
+                             alt="Run DE" class="info-link-img">
+                        <span class="info-link-text">Run DE Analysis</span>
+                    </button>
+                </div>
             </div>
         </div>
     `;

@@ -452,6 +452,7 @@ body {
     color: white;
     font-family: 'Courier New', Courier, monospace;
     /*height: calc(100% - <upload-container-height> - 20px);*/
+    position: relative; /* allow absolute-positioned Run DE button inside */
 }
 
 /* Right column - plot container (spans full height) */
@@ -546,6 +547,13 @@ body {
     display: flex;
     /*justify-content: flex-end; /* pushes it right */
     /*margin-top: 15px;*/
+}
+
+/* Position the Run DE button like the Run PCA button */
+.group-action-button {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 14px;
 }
 
 /* Reset native button look */
