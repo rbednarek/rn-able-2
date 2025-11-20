@@ -17,3 +17,19 @@ db-migrate:
 
 db-flush:
 	python rnable_2/manage.py flush --no-input
+
+
+tests_all:
+	poetry run python rnable_2/manage.py test --verbosity=2
+
+tests_de_analysis:
+	poetry run python rnable_2/manage.py test de_analysis --verbosity=2
+
+tests_core:
+	poetry run python rnable_2/manage.py test core --verbosity=2
+
+tests_home:
+	poetry run python rnable_2/manage.py test home --verbosity=2
+
+tests_enrichment:
+	poetry run python rnable_2/manage.py test enrichment --verbosity=2
