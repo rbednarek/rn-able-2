@@ -90,16 +90,30 @@ class DEAnalysisResult(models.Model):
     def save(self, *args, **kwargs):
         """Calculate n_significant on save"""
         if self.results_data and not self.n_significant:
-            df = pd.DataFrame(self.results_data)
-            if "padj" in df.columns and "log2FoldChange" in df.columns:
-                self.n_significant = len(
-                    df[(df["padj"] < 0.05) & (abs(df["log2FoldChange"]) > 1)]
-                )
+            try:
+                # Handle 'split' orient format
+                if isinstance(self.results_data, dict) and "data" in self.results_data:
+                    df = pd.DataFrame(
+                        data=self.results_data["data"],
+                        index=self.results_data["index"],
+                        columns=self.results_data["columns"],
+                    )
+                else:
+                    df = pd.DataFrame(self.results_data)
+
+                if "padj" in df.columns and "log2FoldChange" in df.columns:
+                    # Count significant genes, handling NaN values
+                    sig_mask = (df["padj"] < 0.05) & (df["log2FoldChange"].abs() > 1)
+                    self.n_significant = int(sig_mask.sum())
+            except Exception as e:
+                print(f"Error calculating n_significant: {e}")
+                self.n_significant = 0
+
         super().save(*args, **kwargs)
 
     def get_significant_genes(self, padj_cutoff=0.05, logfc_cutoff=1):
         """Extract significant genes"""
-        df = pd.DataFrame(self.results_data)
+        df = self.to_dataframe()
         sig_genes = df[
             (df["padj"] < padj_cutoff) & (abs(df["log2FoldChange"]) > logfc_cutoff)
         ]
@@ -107,4 +121,10 @@ class DEAnalysisResult(models.Model):
 
     def to_dataframe(self):
         """Convert results to DataFrame"""
+        if isinstance(self.results_data, dict) and "data" in self.results_data:
+            return pd.DataFrame(
+                data=self.results_data["data"],
+                index=self.results_data["index"],
+                columns=self.results_data["columns"],
+            )
         return pd.DataFrame(self.results_data)

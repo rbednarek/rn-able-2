@@ -103,6 +103,7 @@ def run_de_analysis(counts_df, meta_df, group1, group2, cat_col="group"):
         )
         dds = deseq2.DESeq(dds)
         res = deseq2.results(dds)
+
         res_df = base.as_data_frame(res)
 
     return res_df
