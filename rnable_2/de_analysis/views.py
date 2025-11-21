@@ -4,7 +4,9 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 from core.models import AnalysisSession
 from .models import PCAResult, DEAnalysisResult
+import math
 import pandas as pd
+import numpy as np
 import json
 import uuid
 import gzip
@@ -258,6 +260,7 @@ def run_de_analysis_api(request):
         )
 
         # Save results with group definitions
+        sanitized_results = _dataframe_to_json(results_df)
         de_result = DEAnalysisResult.objects.create(
             session=session,
             pca_result=pca_result,  # Link to PCA if it exists
@@ -265,16 +268,11 @@ def run_de_analysis_api(request):
             treatment_group=treatment_group_name,
             control_samples=control_samples,
             treatment_samples=treatment_samples,
-            results_data=results_df.to_dict(orient="split"),
+            results_data=sanitized_results,
             results_csv=results_df.to_csv(),
             metadata_csv=meta_filtered.to_csv(),
             source="generated",
         )
-
-        # Remove count data once DE is complete (optional cleanup)
-        if session.de_results.exists():
-            session.count_data = None
-            session.save()
 
         return JsonResponse(
             {
@@ -288,6 +286,34 @@ def run_de_analysis_api(request):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+
+
+def _dataframe_to_json(df):
+    """Convert DataFrame to dict with JSON-friendly values."""
+    safe_df = df.replace([np.nan, np.inf, -np.inf], None)
+    payload = safe_df.to_dict(orient="split")
+    return _convert_value(payload)
+
+
+def _convert_value(value):
+    """Recursively convert values to JSON-friendly primitives."""
+    if isinstance(value, dict):
+        return {k: _convert_value(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_convert_value(v) for v in value]
+    if isinstance(value, tuple):
+        return tuple(_convert_value(v) for v in value)
+    if isinstance(value, np.generic):
+        return value.item()
+    if (
+        isinstance(value, (float, int))
+        and isinstance(value, float)
+        and not math.isfinite(value)
+    ):
+        return None
+    if pd.isna(value):
+        return None
+    return value
 
 
 @require_http_methods(["GET"])

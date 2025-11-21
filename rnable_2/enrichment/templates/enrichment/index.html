@@ -7,14 +7,171 @@
 {% endblock %}
 
 {% block content %}
-<div class="welcome-box">
-        <pre class="ascii-title">
-    ______           _      __                         __
-   / ____/___  _____(_)____/ /_  ____ ___  ___  ____  / /_
-  / __/ / __ \/ ___/ / ___/ __ \/ __ `__ \/ _ \/ __ \/ __/
- / /___/ / / / /  / / /__/ / / / / / / / /  __/ / / / /_
-/_____/_/ /_/_/  /_/\___/_/ /_/_/ /_/ /_/\___/_/ /_/\__/
-        </pre>
-        <p>App in progress</p>
+<div class="enrichment-layout">
+    <div class="enrichment-panel">
+        <div class="welcome-box">
+            <pre class="ascii-title">
+                 ______           _      __                         __
+                / ____/___  _____(_)____/ /_  ____ ___  ___  ____  / /_
+               / __/ / __ \/ ___/ / ___/ __ \/ __ `__ \/ _ \/ __ \/ __/
+              / /___/ / / / /  / / /__/ / / / / / / / /  __/ / / / /_
+             /_____/_/ /_/_/  /_/\___/_/ /_/_/ /_/ /_/\___/_/ /_/\__/
+            </pre>
+        </div>
+
+        <label for="session-select" class="form-label">Session</label>
+        <select id="session-select" class="session-select" {% if not session_ids %}disabled{% endif %}>
+            <option value="" selected disabled>
+                {% if session_ids %}
+                    Select a session
+                {% else %}
+                    No DE data available yet
+                {% endif %}
+            </option>
+            {% for session_id in session_ids %}
+                <option value="{{ session_id }}">{{ session_id }}</option>
+            {% endfor %}
+        </select>
+
+        <p id="enrichment-status" class="status-message">
+            {% if not session_ids %}
+                Upload DE results to see available sessions.
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="enrichment-panel plot-panel">
+        <div id="de-scatter" class="plot-placeholder"></div>
+    </div>
 </div>
+{{ session_ids|json_script:"session-ids" }}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<script>
+const sessionSelect = document.getElementById('session-select');
+const statusText = document.getElementById('enrichment-status');
+const plotContainer = document.getElementById('de-scatter');
+const sessionIds = JSON.parse(document.getElementById('session-ids').textContent || '[]');
+const endpointTemplate = "{% url 'enrichment:session_de_data' session_id='__SESSION_ID__' %}";
+const emptyLayout = {
+    title: 'Select a session to start plotting',
+    paper_bgcolor: 'transparent',
+    plot_bgcolor: '#0e1111',
+    font: {color: '#fff', family: 'Courier New, monospace'},
+    margin: {t: 60, b: 60, l: 60, r: 20},
+    annotations: [
+        {
+            text: sessionIds.length
+                ? 'Choose a session from the dropdown above'
+                : 'Upload DE results to see available sessions',
+            xref: 'paper',
+            yref: 'paper',
+            x: 0.5,
+            y: 0.5,
+            showarrow: false,
+            font: {color: '#c9c9c9', size: 16},
+        },
+    ],
+};
+
+function setStatus(message, isError = false) {
+    statusText.textContent = message;
+    statusText.style.color = isError ? '#ff7070' : '';
+}
+
+async function loadSession(sessionId) {
+    if (!sessionId) {
+        setStatus('Select a valid session to plot data.', true);
+        return;
+    }
+
+    setStatus(`Loading results for ${sessionId}...`);
+    plotContainer.classList.add('loading');
+
+    try {
+        const url = endpointTemplate.replace('__SESSION_ID__', encodeURIComponent(sessionId));
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            const data = await response.json().catch(() => ({}));
+            throw new Error(data.error || 'Unable to load results');
+        }
+
+        const payload = await response.json();
+        if (!payload.padj.length || !payload.log2FoldChange.length) {
+            throw new Error('No valid DE statistics returned for this session');
+        }
+
+        const trace = {
+            x: payload.log2FoldChange,
+            y: payload.padj,
+            mode: 'markers',
+            type: 'scatter',
+            text: payload.genes,
+            marker: {
+                size: 8,
+                color: '#4caf50aa',
+                line: {
+                    width: 1,
+                    color: '#1f7a15'
+                }
+            },
+            hovertemplate: '<b>%{text}</b><br>log2FC: %{x:.3f}<br>padj: %{y:.3g}<extra></extra>',
+        };
+
+        const layout = {
+            title: `padj vs log2 fold change (${payload.session_id})`,
+            xaxis: {
+                title: 'log2FoldChange',
+                zeroline: false,
+            },
+            yaxis: {
+                title: 'padj',
+                autorange: 'reversed',
+                zeroline: false,
+            },
+            font: {
+                color: '#fff',
+                family: 'Courier New, monospace',
+            },
+            paper_bgcolor: 'transparent',
+            plot_bgcolor: '#0e1111',
+            margin: {
+                t: 40,
+                b: 60,
+                l: 60,
+                r: 20,
+            },
+        };
+
+        Plotly.react(plotContainer, [trace], layout, {displayModeBar: true});
+        setStatus(`Plotting ${payload.padj.length} genes from session ${payload.session_id}`);
+    } catch (error) {
+        setStatus(error.message, true);
+        Plotly.purge(plotContainer);
+    } finally {
+        plotContainer.classList.remove('loading');
+    }
+}
+
+function renderEmptyPlot() {
+    Plotly.react(plotContainer, [], emptyLayout);
+}
+
+sessionSelect?.addEventListener('change', () => {
+    const selected = sessionSelect.value;
+    if (!selected) {
+        setStatus('Select a session to plot data.', true);
+        renderEmptyPlot();
+        return;
+    }
+
+    loadSession(selected);
+});
+
+renderEmptyPlot();
+</script>
 {% endblock %}

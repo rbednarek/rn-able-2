@@ -1,8 +1,6 @@
 from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
-import pandas as pd
 import rpy2.robjects as ro
 from rpy2.robjects.packages import importr
 from rpy2.robjects import pandas2ri, default_converter
@@ -52,6 +50,14 @@ def plot_count_pca(
     if meta_df is not None:
         pca_df = pca_df.join(meta_df, how="left")
     if plot:
+        try:
+            import matplotlib.pyplot as plt
+        except ImportError as exc:
+            raise ImportError(
+                "Matplotlib is required to render PCA diagnostics. "
+                "Set plot=False if you only need the PCA coordinates."
+            ) from exc
+
         plt.figure(figsize=(8, 6))
         if meta_df is not None:
             markers = ["o", "s", "^", "D", "X", "P", "*"]
