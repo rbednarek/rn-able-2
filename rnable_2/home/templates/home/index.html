@@ -3,6 +3,10 @@
 
 {% block title %}RN-able - Home{% endblock %}
 
+{% block banner_title %}
+<!-- Page title goes here -->
+{% endblock %}
+
 {% block content %}
 <div class="two-column-container">
     <div class="welcome-box">
@@ -30,7 +34,7 @@
         </pre>
         <ul class="info-links">
             <li>
-                <a href="{% url 'de_analysis:dea' %}" class="info-link">
+                <a href="{% url 'de_analysis:de-analysis' %}" class="info-link">
                     <img src="{% static 'images/icons/app_button.png' %}" alt="DE Analysis Icon" class="info-link-img">
                     <span class="info-link-text">Differential Expression Analysis</span>
                 </a>
@@ -44,7 +48,7 @@
             <li>
                 <a href="{% url 'data_upload:single_upload' %}" class="info-link">
                     <img src="{% static 'images/icons/app_button.png' %}" alt="Single File Icon" class="info-link-img">
-                    <span class="info-link-text">Single File Upload</span>
+                    <span class="info-link-text">Single Results File Upload</span>
                 </a>
             </li>
         </ul>

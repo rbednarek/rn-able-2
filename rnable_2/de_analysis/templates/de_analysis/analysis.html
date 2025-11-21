@@ -1,0 +1,731 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}RN-able - DE Analysis{% endblock %}
+
+{% block banner_title %}
+<div class="banner-page-title">Differential Expression Analysis</div>
+{% endblock %}
+
+{% block content %}
+<div class="de-layout">
+    <!-- Upload Container -->
+    <div class="upload-container">
+        {% if not session_id %}
+        <pre class="ascii-title-small">
+    _______ __        __  __      __                __
+   / ____(_) /__     / / / /___  / /___  ____ _____/ /
+  / /_  / / / _ \   / / / / __ \/ / __ \/ __ `/ __  /
+ / __/ / / /  __/  / /_/ / /_/ / / /_/ / /_/ / /_/ /
+/_/   /_/_/\___/   \____/ .___/_/\____/\__,_/\__,_/
+                       /_/
+        </pre>
+
+        <form id="upload-form" enctype="multipart/form-data">
+            <div class="form-group experiment-name-group" style="margin-bottom: 15px;">
+                <span class="form-label">Experiment Name:</span>
+                <input type="text" id="experiment-name" name="experiment_name"
+                    placeholder="e.g., EXP25-1234"
+                    style="width: 50%; padding: 5px; font-size: 12px; font-family: 'Courier New', monospace;">
+            </div>
+            <div class="form-group">
+                <span class="form-label">Count Data:</span>
+                <input type="file" id="count-file" name="count_file"
+                       accept=".csv,.tsv,.csv.gz,.tsv.gz" required>
+            </div>
+
+            <div class="form-group">
+                <span class="form-label">Metadata (optional):</span>
+                <input type="file" id="metadata-file" name="metadata_file"
+                       accept=".csv,.tsv,.csv.gz,.tsv.gz">
+            </div>
+
+            <div class="upload-button">
+                <button type="submit" class="info-link upload-trigger">
+                    <img src="{% static 'images/icons/app_button.png' %}"
+                         alt="Upload Icon" class="info-link-img">
+                    <span class="info-link-text">Run PCA</span>
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <pre class="ascii-title-small">
+    ____                  ____
+   / __ \___  _______  __/ / /______
+  / /_/ / _ \/ ___/ / / / / __/ ___/
+ / _, _/  __(__  ) /_/ / / /_(__  )
+/_/ |_|\___/____/\__,_/_/\__/____/
+        </pre>
+        <!-- Session exists - show session info -->
+        <div style="color: white;">
+            <p><strong>Experiment:</strong> {{ session.name }}</p>
+            <p><strong>Session:</strong> <code>{{ session_id }}</code></p>
+            <p><strong>Samples:</strong> {{ session.get_sample_count }}</p>
+            <p><strong>Genes:</strong> {{ session.get_gene_count }}</p>
+
+            {% if not pca_data %}
+            <button id="run-pca-btn" class="info-link" style="margin-top: 15px;">
+                <img src="{% static 'images/icons/app_button.png' %}"
+                     alt="Run Icon" class="info-link-img">
+                <span class="info-link-text">Run PCA</span>
+            </button>
+            {% else %}
+            <p id="control-group-line" style="display: none;"><strong>Control Group:</strong> <span id="control-group-name-display"></span></p>
+            <p id="treatment-group-line" style="display: none;"><strong>Treatment Group:</strong> <span id="treatment-group-name-display"></span></p>
+            <p style="margin-top: 15px; color: #4CAF50; "><b>✓ PCA Complete</b></p>
+            <div class="upload-button">
+                <button type="button" id="download-session" class="info-link upload-trigger">
+                    <img src="{% static 'images/icons/app_button.png' %}"
+                         alt="Download Icon" class="info-link-img">
+                    <span class="info-link-text">Download Session Info</span>
+                </button>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Plot Container -->
+    <div class="plot-container">
+        <pre class="ascii-title-small">
+    ____  _________       ____  __      __
+   / __ \/ ____/   |     / __ \/ /___  / /_
+  / /_/ / /   / /| |    / /_/ / / __ \/ __/
+ / ____/ /___/ ___ |   / ____/ / /_/ / /_
+/_/    \____/_/  |_|  /_/   /_/\____/\__/
+        </pre>
+        <div id="scatter-plot"></div>
+    </div>
+
+    <!-- Groups Container -->
+    <div class="groups-container" id="groups-container">
+        <pre class="ascii-title-small">
+   ______
+  / ____/________  __  ______  _____
+ / / __/ ___/ __ \/ / / / __ \/ ___/
+/ /_/ / /  / /_/ / /_/ / /_/ (__  )
+\____/_/   \____/\__,_/ .___/____/
+                     /_/
+        </pre>
+        {% if not pca_data %}
+        <p style="color: white; font-size: 12px;">Run PCA before defining groups for DE Analysis.</p>
+        {% else %}
+        <!-- Group selection interface -->
+        <div style="color: white;">
+            <p style="font-size: 11px; margin-bottom: 10px;">Select samples with lasso/box tool, then define groups:</p>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <input type="text" id="control-group-name"
+                    placeholder="Control group name"
+                    style="width: 100%; padding: 5px; font-size: 12px; font-family: 'Courier New', monospace;">
+                <div class="inline-action-row">
+                    <div class="small-button">
+                        <button id="define-control-btn" class="small-trigger">
+                            <img src="{% static 'images/icons/app_button.png' %}"
+                                alt="Define Control" class="info-link-img">
+                            <span class="info-link-text">Define Control</span>
+                        </button>
+                    </div>
+                    <div id="control-status" style="font-size: 10px; color: #4CAF50;"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="text" id="treatment-group-name"
+                    placeholder="Treatment group name"
+                    style="width: 100%; padding: 5px; font-size: 12px; font-family: 'Courier New', monospace;">
+                <div class="inline-action-row">
+                    <div class="small-button">
+                        <button id="define-treatment-btn" class="small-trigger">
+                            <img src="{% static 'images/icons/app_button.png' %}"
+                                alt="Define Treatment" class="info-link-img">
+                            <span class="info-link-text">Define Treatment</span>
+                        </button>
+                    </div>
+                    <div id="treatment-status" style="font-size: 10px; color: #4CAF50;"></div>
+                </div>
+            </div>
+
+            <div id="run-de-container" style="display: none;">
+                <div class="group-action-button">
+                    <button id="run-de-btn" class="info-link upload-trigger">
+                        <img src="{% static 'images/icons/app_button.png' %}"
+                            alt="Run DE Analysis" class="info-link-img">
+                        <span class="info-link-text">Run DE Analysis</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+<script>
+// Updated JavaScript for the template - replace the existing JavaScript block
+
+const csrfToken = '{{ csrf_token }}';
+const initialCountFileName = '{{ count_file_name|default:"" }}';
+const initialMetadataFileName = '{{ metadata_file_name|default:"" }}';
+
+const state = {
+    sessionId: '{{ session_id|default:"" }}',
+    selectedSamples: [],
+    visibleTraces: [],
+    pcaSamples: [],
+    experimentName: '{{ session.name|default:"" }}',
+    controlGroup: {
+        name: '',
+        samples: []
+    },
+    treatmentGroup: {
+        name: '',
+        samples: []
+    }
+};
+
+// ============================================
+// Utility Functions
+// ============================================
+const customPalette = getComputedStyle(document.documentElement)
+    .getPropertyValue('--plot-colors')
+    .split(',')
+    .map(c => c.trim());
+
+function getOutlineColor(hex) {
+    const c = hex.startsWith('#') ? hex.slice(1) : hex;
+    const r = parseInt(c.substr(0, 2), 16);
+    const g = parseInt(c.substr(2, 2), 16);
+    const b = parseInt(c.substr(4, 2), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 220 ? '#000000' : '#ffffff';
+}
+
+function updatePlotWithData(pcaData) {
+    const traces = [];
+
+    if (pcaData.plot_config.metadata && pcaData.plot_config.metadata_columns) {
+        const col1 = pcaData.plot_config.metadata_columns[0];
+        const groups = {};
+
+        pcaData.plot_config.samples.forEach((sample, i) => {
+            const group = pcaData.plot_config.metadata[col1][i];
+            if (!groups[group]) {
+                groups[group] = {samples: [], pc1: [], pc2: []};
+            }
+            groups[group].samples.push(sample);
+            groups[group].pc1.push(pcaData.plot_config.pc1[i]);
+            groups[group].pc2.push(pcaData.plot_config.pc2[i]);
+        });
+
+        Object.entries(groups).forEach(([groupName, groupData], idx) => {
+            const color = customPalette[idx % customPalette.length];
+            traces.push({
+                x: groupData.pc1,
+                y: groupData.pc2,
+                mode: 'markers',
+                type: 'scatter',
+                name: groupName,
+                text: groupData.samples,
+                marker: {
+                    size: 10,
+                    color: color,
+                    line: {
+                        width: 1,
+                        color: getOutlineColor(color)
+                    }
+                }
+            });
+        });
+
+        state.visibleTraces = traces.map(t => t.name);
+    } else {
+        traces.push({
+            x: pcaData.plot_config.pc1,
+            y: pcaData.plot_config.pc2,
+            mode: 'markers',
+            type: 'scatter',
+            name: 'All Samples',
+            text: pcaData.plot_config.samples,
+            marker: {size: 10, color: '#c9ba30ff'}
+        });
+        state.visibleTraces = ['All Samples'];
+    }
+
+    const layout = {
+        xaxis: {title: `PC1 (${pcaData.pc1_variance.toFixed(2)}%)`},
+        yaxis: {title: `PC2 (${pcaData.pc2_variance.toFixed(2)}%)`},
+        width: 500,
+        height: 500,
+        margin: {t: 40, l: 50, r: 20, b: 120},
+        paper_bgcolor: '#0e1111',
+        plot_bgcolor: '#0e1111',
+        font: {color: '#fff', family: 'Courier New, monospace'},
+        hovermode: 'closest',
+        dragmode: 'select',
+        showlegend: true,
+        legend: {
+            orientation: 'h',
+            x: 0,
+            y: -0.2,
+            xanchor: 'left',
+            yanchor: 'top',
+            font: {color: '#fff', size: 8},
+            itemwidth: 20,
+        }
+    };
+
+    Plotly.react('scatter-plot', traces, layout);
+    // keep sample ids in state for CSV export
+    if (pcaData.plot_config && pcaData.plot_config.samples) {
+        state.pcaSamples = pcaData.plot_config.samples.slice();
+    }
+
+    document.getElementById('scatter-plot').on('plotly_restyle', function(data) {
+        if (data[0].visible) {
+            const plotDiv = document.getElementById('scatter-plot');
+            state.visibleTraces = plotDiv.data
+                .map((trace, idx) => plotDiv.data[idx].visible !== 'legendonly' ? trace.name : null)
+                .filter(name => name !== null);
+        }
+    });
+}
+
+function updateGroupsContainer() {
+    const groupsContainer = document.getElementById('groups-container');
+    groupsContainer.innerHTML = `
+        <pre class="ascii-title-small">
+   ______
+  / ____/________  __  ______  _____
+ / / __/ ___/ __ \\/ / / / __ \\/ ___/
+/ /_/ / /  / /_/ / /_/ / /_/ (__  )
+\\____/_/   \\____/\\__,_/ .___/____/
+                     /_/
+        </pre>
+        <div style="color: white;">
+            <p style="font-size: 11px; margin-bottom: 10px;">Select samples with lasso/box tool, then define groups:</p>
+
+            <div class="form-group" style="margin-bottom: 15px;">
+                <input type="text" id="control-group-name"
+                       placeholder="Control group name"
+                       value="${state.controlGroup.name}"
+                       style="width: 100%; padding: 5px; font-size: 12px; font-family: 'Courier New', monospace;">
+                <div class="inline-action-row">
+                    <div class="small-button">
+                        <button id="define-control-btn" class="small-trigger">
+                            <img src="/static/images/icons/app_button.png"
+                                 alt="Define Control" class="info-link-img">
+                            <span class="info-link-text">Define Control</span>
+                        </button>
+                    </div>
+                    <div id="control-status" style="font-size: 10px; color: #4CAF50;"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="text" id="treatment-group-name"
+                       placeholder="Treatment group name"
+                       value="${state.treatmentGroup.name}"
+                       style="width: 100%; padding: 5px; font-size: 12px; font-family: 'Courier New', monospace;">
+                <div class="inline-action-row">
+                    <div class="small-button">
+                        <button id="define-treatment-btn" class="small-trigger">
+                            <img src="/static/images/icons/app_button.png"
+                                 alt="Define Treatment" class="info-link-img">
+                            <span class="info-link-text">Define Treatment</span>
+                        </button>
+                    </div>
+                    <div id="treatment-status" style="font-size: 10px; color: #4CAF50;"></div>
+                </div>
+            </div>
+
+            <div id="run-de-container" style="display: none;">
+                <div class="group-action-button">
+                    <button id="run-de-btn" class="info-link upload-trigger">
+                        <img src="/static/images/icons/app_button.png"
+                             alt="Run DE" class="info-link-img">
+                        <span class="info-link-text">Run DE Analysis</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    attachGroupEventListeners();
+}
+
+function updateLoadingContainer(sessionId, sampleCount, geneCount, countFileName, metadataFileName, experimentName) {
+    const uploadContainer = document.querySelector('.upload-container');
+    const dateTime = new Date().toLocaleString();
+    if (experimentName) {
+        state.experimentName = experimentName;
+    }
+
+    uploadContainer.innerHTML = `
+        <pre class="ascii-title-small">
+    ____                  ____
+   / __ \\___  _______  __/ / /______
+  / /_/ / _ \\/ ___/ / / / / __/ ___/
+ / _, _/  __(__  ) /_/ / / /_(__  )
+/_/ |_|\\___/____/\\__,_/_/\\__/____/
+        </pre>
+
+        <div style="color: white;">
+            <p><strong>Experiment:</strong> ${state.experimentName || ''}</p>
+            <p><strong>Session:</strong> <code>${sessionId}</code></p>
+            <p><strong>Samples:</strong> ${sampleCount}</p>
+            <p><strong>Genes:</strong> ${geneCount}</p>
+
+            <p id="control-group-line" style="display: none;"><strong>Control Group:</strong> <span id="control-group-name-display"></span></p>
+            <p id="treatment-group-line" style="display: none;"><strong>Treatment Group:</strong> <span id="treatment-group-name-display"></span></p>
+            <p style="margin-top: 15px; color: #4CAF50; "><b>✓ PCA Complete</b></p>
+            <div class="upload-button">
+                <button type="button" id="download-session" class="info-link upload-trigger">
+                    <img src="/static/images/icons/app_button.png"
+                         alt="Download Icon" class="info-link-img">
+                    <span class="info-link-text">Download Session Info</span>
+                </button>
+            </div>
+        </div>
+    `;
+
+    attachDownloadHandler({
+        sessionId,
+        sampleCount,
+        geneCount,
+        countFileName,
+        metadataFileName,
+        dateTime,
+        experimentName: state.experimentName || ''
+    });
+    updateGroupSummary();
+}
+
+function checkBothGroupsDefined() {
+    const bothDefined = state.controlGroup.samples.length > 0 &&
+                       state.treatmentGroup.samples.length > 0;
+
+    const runDeContainer = document.getElementById('run-de-container');
+    if (runDeContainer) {
+        runDeContainer.style.display = bothDefined ? 'block' : 'none';
+    }
+    updateGroupSummary();
+}
+
+// ============================================
+// Initialize Empty Plot
+// ============================================
+(function() {
+    const layout = {
+        xaxis: {title: 'PC1'},
+        yaxis: {title: 'PC2'},
+        width: 500,
+        height: 500,
+        margin: {t: 40, l: 50, r: 20, b: 120},
+        paper_bgcolor: '#0e1111',
+        plot_bgcolor: '#0e1111',
+        font: {color: '#fff', family: 'Courier New, monospace'},
+        hovermode: 'closest',
+        dragmode: 'select',
+        showlegend: false,
+    };
+
+    const config = {
+        responsive: false,
+        displaylogo: false,
+        displayModeBar: true,
+    };
+
+    Plotly.newPlot('scatter-plot', [], layout, config);
+
+    document.getElementById('scatter-plot').on('plotly_selected', function(eventData) {
+        if (eventData && eventData.points) {
+            state.selectedSamples = eventData.points
+                .filter(point => {
+                    const traceName = point.data.name;
+                    return state.visibleTraces.includes(traceName);
+                })
+                .map(p => p.text);
+
+            console.log('Selected samples (visible traces only):', state.selectedSamples);
+        }
+    });
+})();
+
+// ============================================
+// Load PCA Data if Available
+// ============================================
+{% if pca_data %}
+(function() {
+    const plotConfig = {{ pca_data.plot_config|safe }};
+    const pcaData = {
+        plot_config: plotConfig,
+        pc1_variance: {{ pca_data.pc1_variance }},
+        pc2_variance: {{ pca_data.pc2_variance }}
+    };
+
+    updatePlotWithData(pcaData);
+})();
+{% endif %}
+
+// ============================================
+// Upload Form Handler
+// ============================================
+{% if not session_id %}
+document.getElementById('upload-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const formData = new FormData();
+    const experimentName = document.getElementById('experiment-name').value.trim();
+    const countFile = document.getElementById('count-file').files[0];
+    const metadataFile = document.getElementById('metadata-file').files[0];
+
+    if (!countFile) {
+        alert('Please select a count file');
+        return;
+    }
+
+    if (!experimentName) {
+        alert('Please enter an experiment name');
+        return;
+    }
+
+    formData.append('count_file', countFile);
+    formData.append('experiment_name', experimentName);
+    if (metadataFile) {
+        formData.append('metadata_file', metadataFile);
+    }
+
+    showLoading('Running PCA...');
+
+    try {
+        const uploadResponse = await fetch("{% url 'de_analysis:upload_data' %}", {
+            method: 'POST',
+            body: formData
+        });
+
+        const uploadData = await uploadResponse.json();
+
+        if (!uploadData.success) {
+            alert('Upload failed: ' + uploadData.error);
+            hideLoading();
+            return;
+        }
+
+        const pcaResponse = await fetch("{% url 'de_analysis:run_pca' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({session_id: uploadData.session_id}),
+            credentials: 'same-origin'
+        });
+
+        const pcaData = await pcaResponse.json();
+
+        if (pcaData.success) {
+            state.sessionId = uploadData.session_id;
+            updatePlotWithData(pcaData);
+            updateLoadingContainer(
+                uploadData.session_id,
+                uploadData.samples.length,
+                uploadData.genes,
+                uploadData.count_file_name,
+                uploadData.metadata_file_name,
+                uploadData.experiment_name
+            );
+            updateGroupsContainer();
+
+            window.history.replaceState(
+                {session: uploadData.session_id},
+                '',
+                '{% url "de_analysis:de-analysis" %}?session_id=' + encodeURIComponent(uploadData.session_id)
+            );
+
+            hideLoading();
+        } else {
+            alert('PCA failed: ' + pcaData.error);
+            hideLoading();
+        }
+    } catch (error) {
+        alert('Error: ' + error.message);
+        hideLoading();
+    }
+});
+
+{% endif %}
+
+// ============================================
+// Group Definition Functions
+// ============================================
+function attachGroupEventListeners() {
+    document.getElementById('define-control-btn')?.addEventListener('click', function() {
+        const groupName = document.getElementById('control-group-name').value.trim();
+
+        if (!groupName) {
+            alert('Please enter a control group name');
+            return;
+        }
+
+        if (state.selectedSamples.length === 0) {
+            alert('Please select samples using lasso or box tool first');
+            return;
+        }
+
+        state.controlGroup.name = groupName;
+        state.controlGroup.samples = [...state.selectedSamples];
+
+        document.getElementById('control-status').innerHTML =
+            `✓ ${groupName}: ${state.selectedSamples.length} samples`;
+
+        checkBothGroupsDefined();
+        updateGroupSummary();
+    });
+
+    document.getElementById('define-treatment-btn')?.addEventListener('click', function() {
+        const groupName = document.getElementById('treatment-group-name').value.trim();
+
+        if (!groupName) {
+            alert('Please enter a treatment group name');
+            return;
+        }
+
+        if (state.selectedSamples.length === 0) {
+            alert('Please select samples using lasso or box tool first');
+            return;
+        }
+
+        state.treatmentGroup.name = groupName;
+        state.treatmentGroup.samples = [...state.selectedSamples];
+
+        document.getElementById('treatment-status').innerHTML =
+            `✓ ${groupName}: ${state.selectedSamples.length} samples`;
+
+        checkBothGroupsDefined();
+        updateGroupSummary();
+    });
+
+    document.getElementById('run-de-btn')?.addEventListener('click', async function() {
+        showLoading('Running DE Analysis...');
+
+        try {
+            const response = await fetch("{% url 'de_analysis:run_de' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    session_id: state.sessionId,
+                    control_group_name: state.controlGroup.name,
+                    treatment_group_name: state.treatmentGroup.name,
+                    control_samples: state.controlGroup.samples,
+                    treatment_samples: state.treatmentGroup.samples
+                }),
+                credentials: 'same-origin'
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                hideLoading();
+                alert(`DE Analysis complete!\n${data.n_significant} significant genes found.`);
+
+                // Redirect to enrichment or show results
+                if (data.enrichment_url) {
+                    window.location.href = data.enrichment_url;
+                }
+            } else {
+                hideLoading();
+                alert('DE Analysis failed: ' + data.error);
+            }
+        } catch (error) {
+            hideLoading();
+            alert('Error: ' + error.message);
+        }
+    });
+}
+
+function updateGroupSummary() {
+    const controlLine = document.getElementById('control-group-line');
+    const controlName = document.getElementById('control-group-name-display');
+    const treatmentLine = document.getElementById('treatment-group-line');
+    const treatmentName = document.getElementById('treatment-group-name-display');
+
+    if (controlLine && controlName) {
+        if (state.controlGroup.name) {
+            controlName.textContent = state.controlGroup.name;
+            controlLine.style.display = '';
+        } else {
+            controlLine.style.display = 'none';
+        }
+    }
+
+    if (treatmentLine && treatmentName) {
+        if (state.treatmentGroup.name) {
+            treatmentName.textContent = state.treatmentGroup.name;
+            treatmentLine.style.display = '';
+        } else {
+            treatmentLine.style.display = 'none';
+        }
+    }
+}
+
+function attachDownloadHandler(meta) {
+    const btn = document.getElementById('download-session');
+    if (!btn) return;
+    const sessionId = meta?.sessionId || state.sessionId;
+    const sampleCount = meta?.sampleCount || (state.pcaSamples?.length || '');
+    const geneCount = meta?.geneCount || '';
+    const countFileName = meta?.countFileName || initialCountFileName || '';
+    const metadataFileName = meta?.metadataFileName || initialMetadataFileName || '';
+    const dateTime = meta?.dateTime || new Date().toLocaleString();
+    const expName = meta?.experimentName || state.experimentName || '';
+
+    function sanitizeName(name) {
+        return (name || '').toString().trim().replace(/\s+/g, '_').replace(/[^A-Za-z0-9_\-]+/g, '');
+    }
+
+    btn.addEventListener('click', () => {
+        const samplesCsv = (state.pcaSamples || []).join(',');
+        const controlCsv = (state.controlGroup.samples || []).join(',');
+        const treatmentCsv = (state.treatmentGroup.samples || []).join(',');
+
+        const csvContent = `Experiment Name,${expName}
+Session ID,${sessionId}
+Samples,${sampleCount}
+Genes,${geneCount}
+Count File,${countFileName || 'N/A'}
+Metadata File,${metadataFileName || 'N/A'}
+Date Created,${dateTime}
+Samples,${samplesCsv}
+Control Group Name,${state.controlGroup.name || 'N/A'}
+Control Samples,${controlCsv || 'N/A'}
+Treatment Group Name,${state.treatmentGroup.name || 'N/A'}
+Treatment Samples,${treatmentCsv || 'N/A'}`;
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        const base = sanitizeName(expName) ? `${sanitizeName(expName)}_${sessionId}` : `session_${sessionId}`;
+        link.setAttribute('download', `${base}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    });
+}
+
+{% if pca_data %}
+attachGroupEventListeners();
+// attach download handler on initial load (pca_data present)
+attachDownloadHandler();
+updateGroupSummary();
+{% endif %}
+</script>
+{% endblock %}

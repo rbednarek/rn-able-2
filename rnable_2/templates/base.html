@@ -14,6 +14,7 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body>
+    <input type="hidden" id="csrf-token" value="{{ csrf_token }}">
     {# Logout Button (if authenticated) #}
     {% if user.is_authenticated %}
     <form method="post" action="{% url 'admin:logout' %}" class="logout-form">
@@ -28,17 +29,21 @@
         <a href="{% url 'home:home' %}">
             <img src="{% static 'images/banner/rnable2_400_133.png' %}" alt="RN-able Logo" class="banner-img">
         </a>
+        {% block banner_title %}
+            <div class="banner-page-title">Differential Expression Analysis</div>
+        {% endblock %}
+        {# Dropdown Navigation Menus #}
         <div class="banner-dropdowns">
             <a href="{% url 'home:home' %}" class="dropbtn">Home</a>
             <div class="dropdown">
                 <button class="dropbtn">Apps</button>
                 <div class="dropdown-content">
-                    <a href="{% url 'de_analysis:dea' %}">DE Analysis</a>
+                    <a href="{% url 'de_analysis:de-analysis' %}">DE Analysis</a>
                     <a href="{% url 'enrichment:enrich' %}">Enrichment Analysis</a>
                 </div>
             </div>
             <div class="dropdown">
-                <button class="dropbtn">Upload Data</button>
+                <button class="dropbtn">Upload Results</button>
                 <div class="dropdown-content">
                     <a href="{% url 'data_upload:single_upload' %}">Single File Upload</a>
                 </div>

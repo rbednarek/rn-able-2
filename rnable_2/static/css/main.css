@@ -48,6 +48,27 @@ body {
     width: 200px;  /* Changed from 400px to 200px (half) */
 }
 
+
+.banner-page-title {
+    position: absolute;
+    right: 30px;  /* Changed from right to left */
+    bottom: 10px;
+    transform: none;
+    color: #fff;
+    font-weight: bold;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 20px;
+    z-index: 2;
+}
+
+.banner-title {
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    color: #fff;
+    font-size: 1.2em;
+    text-align: right;
+}
+
 /* Dropdown Menu Styles */
 .banner-dropdowns {
     position: absolute;
@@ -131,6 +152,81 @@ body {
     position: relative;
 }
 
+.enrichment-layout {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.enrichment-panel {
+    background-color: #0e1111;
+    padding: 24px;
+    border-radius: 10px;
+    color: white;
+    font-family: 'Courier New', Courier, monospace;
+    min-height: 220px;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6),
+        0 20px 40px rgba(0, 0, 0, 0.35);
+}
+
+.enrichment-panel .ascii-title-small {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+    padding: 14px;
+    border-radius: 6px;
+    margin-bottom: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 12px;
+    line-height: 1.1;
+    letter-spacing: 0.02em;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.enrichment-panel .banner-ascii {
+    color: #fdf1d7;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(13, 20, 28, 0.6));
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: inset 0 0 25px rgba(255, 255, 255, 0.08),
+        inset 0 -2px 3px rgba(0, 0, 0, 0.25);
+}
+
+.enrichment-panel .form-label {
+    display: block;
+    margin-bottom: 6px;
+    color: #c1c1c1;
+}
+
+.enrichment-panel .session-select {
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+}
+
+.status-message {
+    font-size: 12px;
+    color: #c9c9c9;
+}
+
+.plot-panel {
+    min-height: 440px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.plot-placeholder {
+    width: 100%;
+    min-height: 360px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: radial-gradient(circle at top left, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.6));
+    position: relative;
+}
+
 .info-box {
     background-color: #0e1111;
     padding: 20px;
@@ -191,6 +287,25 @@ body {
     font-size: 14px;
     color: white;
     margin-bottom: 20px;
+}
+
+.ascii-title-small {
+    font-family: 'Courier New', Courier, monospace;
+    white-space: pre;
+    line-height: 1.2;
+    font-size: 12px;
+    color: white;
+    margin-bottom: 20px;
+}
+
+.ascii-wrapper {
+    font-family: 'Courier New', Courier, monospace;
+    white-space: pre;
+    line-height: 1.2;
+    font-size: 12px;
+    color: white;
+    margin-bottom: 20px;
+    width: max-content; /* prevents wrapping */
 }
 
 .forum-sections {
@@ -373,4 +488,306 @@ body {
         text-align: center;
         margin-bottom: 20px;
     }
+}
+
+
+/* ============================================
+   DE Analysis Layout
+   ============================================ */
+.de-layout {
+    display: grid;
+    grid-template-columns: 500px 1fr; /* left column adapts to widest content, right fills remaining */
+    grid-template-rows: auto 1fr;    /* top = upload, bottom = groups */
+    gap: 20px;                       /* horizontal and vertical gap */
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Left column - upload container (top) */
+.upload-container {
+    position: relative;
+    grid-column: 1;
+    grid-row: 1;
+    background-color: #0e1111;
+    padding: 20px;
+    border-radius: 8px;
+    color: white;
+    font-family: 'Courier New', Courier, monospace;
+    height: 340px;
+
+}
+
+/* Left column - groups container (bottom) */
+.groups-container {
+    grid-column: 1;
+    grid-row: 2;
+    background-color: #0e1111;
+    padding: 20px;
+    border-radius: 8px;
+    color: white;
+    font-family: 'Courier New', Courier, monospace;
+    /*height: calc(100% - <upload-container-height> - 20px);*/
+    position: relative; /* allow absolute-positioned Run DE button inside */
+}
+
+/* Right column - plot container (spans full height) */
+.plot-container {
+    grid-column: 2;
+    grid-row: 1 / 3; /* spans both rows of left column */
+    background-color: #0e1111;
+    padding: 20px 40px 40px 20px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    /*overflow: hidden;*/
+    /*min-height: 600px;*/
+    align-items: flex-start;
+}
+
+.plot-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+
+.upload-container h2,
+.groups-container h2,
+.plot-container h2 {
+    color: white;
+    font-weight: normal;
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    padding-bottom: 10px;
+}
+
+.upload-container label,
+.groups-container label {
+    color: white;
+}
+
+/* Align labels above inputs in upload container and add consistent spacing */
+.upload-container .form-label {
+    display: block; /* labels above by default */
+    margin-bottom: 6px;
+}
+
+/* Make only the Experiment Name row inline */
+.upload-container .experiment-name-group .form-label {
+    display: inline-block;
+    margin-bottom: 0;
+}
+.upload-container .experiment-name-group input[type="text"] {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Responsive - stack on smaller screens */
+@media (max-width: 1024px) {
+    .de-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+    }
+
+    .upload-container {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .plot-container {
+        grid-column: 1;
+        grid-row: 2;
+    }
+
+    .groups-container {
+        grid-column: 1;
+        grid-row: 3;
+    }
+}
+
+
+/* File Upload Input */
+.custom-upload {
+  text-align: left;
+  margin: 5px;
+}
+
+.upload-section {
+  display: flex;
+  flex-direction: column; /* stack vertically */
+  align-items: left;    /* center tiles horizontally */
+  gap: 1px;              /* spacing between upload tiles */
+  margin-bottom: 5px;
+}
+
+.file-name {
+  margin-top: 6px;
+  margin-left: 5px;
+  font-size: 13px;
+  font-family: monospace;
+  text-align: left;
+  color: #ddd;
+  white-space: nowrap;      /* single line */
+  overflow: hidden;         /* hide overflow */
+  text-overflow: ellipsis;  /* show ellipsis */
+  max-width: 40ch;          /* truncate around ~40 characters */
+}
+
+.upload-button {
+    position: absolute;
+    right: 20px;
+    bottom: 10px;
+    display: flex;
+    /*justify-content: flex-end; /* pushes it right */
+    /*margin-top: 15px;*/
+}
+
+/* Position the Run DE button like the Run PCA button */
+.group-action-button {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 14px;
+}
+
+/* Reset native button look */
+.upload-trigger {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+
+/* Make it match info-link aesthetic */
+.upload-trigger.info-link {
+    background-color: #0e1111; /* same as dark theme boxes */
+    color: white;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    font-size: 20px;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+/* Hover state = lighter black */
+.upload-trigger.info-link:hover {
+    background-color: #1a1c1c;
+}
+
+/* Optional: Keep icon consistent size */
+.upload-trigger .info-link-img {
+    width: 36px;
+    height: 36px;
+}
+
+.file-input-wrapper {
+  display: inline-block;
+  position: relative;
+}
+
+.file-input-wrapper input[type="file"] {
+  cursor: pointer;
+  width: auto;               /* Prevents expanding clickable area */
+  display: inline-block;
+  overflow: hidden;
+}
+
+input[type="file"]::-webkit-file-upload-button {
+  cursor: pointer;           /* Pointer over the actual button */
+}
+
+input[type="file"]::file-selector-button {
+  cursor: pointer;           /* Modern browsers */
+}
+
+input[type="file"] {
+  font-family: 'Courier New', monospace;  /* make text Courier */
+  color: #fff;                            /* soft grey or whatever fits */                     /* space between button & filename */
+  cursor: default;                        /* normal arrow over text area */
+}
+
+/* Truncate native filename label to ellipsis without extra display elements */
+.upload-container input[type="file"] {
+  display: inline-block;
+  max-width: 70%;           /* prevent running into the Run PCA button */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;  /* browser may use middle-ellipsis */
+  vertical-align: middle;
+}
+
+
+/* Color palette */
+ :root {
+    --plot-colors: #c9ba30ff, #4CAF50, #85247dff, #1c7c94ff, #8d2a19ff, #503d2aff, #d1495bff, #007f5fff, #6e6e6eff, #fff;
+}
+
+
+#scatter-plot {
+  width: 500px;
+  height: 500px;
+}
+
+@media (max-width: 600px) {
+  #scatter-plot {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-width: 600px; /* keeps square-ish ratio */
+    max-height: 600px;
+  }
+}
+
+.js-plotly-plot .legend {
+  flex-wrap: wrap !important;
+  justify-content: center !important;
+}
+
+
+/* Smaller buttons for groups selections currently */
+
+.small-button {
+    display: inline-block;
+    margin: 4px;
+}
+
+.inline-action-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+    flex-wrap: nowrap;
+}
+
+button.small-trigger,
+.groups-container .small-trigger {
+    background-color: #0e1111;
+    color: white;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 12px;
+    padding: 4px 8px;
+    gap: 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: none;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: background-color 0.2s ease;
+}
+
+.small-trigger:hover {
+    background-color: #1a1c1c;
+}
+
+/* Consistent small icon sizing for group buttons to avoid layout jumps */
+.small-trigger .info-link-img {
+    width: 20px;
+    height: 20px;
 }
