@@ -18,7 +18,7 @@ cd rnable
 make setup-all
 ```
 
-## Running RN-able 2
+# Running RN-able 2
 ```bash
 conda activate rnable
 make run
