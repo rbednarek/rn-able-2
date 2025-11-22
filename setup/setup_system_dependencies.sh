@@ -148,6 +148,16 @@ install_miniconda() {
     conda activate "$CONDA_ENV"
 
     print_success "Miniconda setup complete"
+    install_deseq2
+}
+
+# Install DESeq2 using BiocManager
+install_deseq2() {
+    print_status "Installing R/DESeq2 via BiocManager in the rnable env..."
+    source "$MINICONDA_DIR/bin/activate"
+    conda activate "$CONDA_ENV"
+    Rscript -e 'if (!requireNamespace("BiocManager", quietly=TRUE)) install.packages("BiocManager", repos="https://cloud.r-project.org"); BiocManager::install("DESeq2", ask=FALSE, update=FALSE)'
+    print_success "DESeq2 installed in the rnable environment"
 }
 
 # Function to install pyenv
@@ -294,6 +304,7 @@ main() {
 
     # Install dependencies
     install_miniconda
+    install_deseq2
     install_pyenv
     install_pipx
     install_poetry

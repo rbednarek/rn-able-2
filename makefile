@@ -7,16 +7,19 @@ setup-db:
 	bash setup/setup_db.sh
 
 run:
-	python rnable_2/manage.py runserver
+	poetry install && poetry run python rnable_2/manage.py runserver
 
 db-make-migrations:
-	python rnable_2/manage.py makemigrations
+	poetry install && poetry run python rnable_2/manage.py makemigrations
 
 db-migrate:
-	python rnable_2/manage.py migrate
+	poetry install && poetry run python rnable_2/manage.py migrate
 
 db-flush:
-	python rnable_2/manage.py flush --no-input
+	poetry install && poetry run python rnable_2/manage.py flush --no-input
+
+db-connect:
+	psql -h localhost -p 5432 -U rnable_user -d rnable_db
 
 
 tests_all:
