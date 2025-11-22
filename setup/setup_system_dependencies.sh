@@ -5,6 +5,9 @@
 
 set -e  # Exit on any error
 
+MINICONDA_DIR="$HOME/miniconda3"
+CONDA_ENV="rnable"
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -91,6 +94,72 @@ update_apt() {
     print_success "apt updated successfully"
 }
 
+# Function to install Miniconda
+install_miniconda() {
+    local MINICONDA_URL
+    if [[ "$OS" == "macos" ]]; then
+        if [[ $(uname -m) == "arm64" ]]; then
+            MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh"
+        else
+            MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh"
+        fi
+    else
+        MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh"
+    fi
+
+    if [[ -d "$MINICONDA_DIR" ]]; then
+        print_status "Miniconda already installed at $MINICONDA_DIR"
+    else
+        print_status "Installing Miniconda..."
+        wget -O /tmp/miniconda.sh "$MINICONDA_URL"
+        bash /tmp/miniconda.sh -b -p "$MINICONDA_DIR"
+        rm /tmp/miniconda.sh
+        print_success "Miniconda installed successfully"
+    fi
+
+    print_status "Initializing conda..."
+    source "$MINICONDA_DIR/bin/activate"
+    conda init bash
+    source ~/.bashrc 2>/dev/null || source ~/.bash_profile 2>/dev/null || true
+
+    print_status "Updating conda base environment..."
+    conda update -n base -c defaults conda -y
+
+    print_status "Creating rnable conda environment with required packages..."
+    conda env list | grep -q "^$CONDA_ENV" >/dev/null 2>&1 || {
+        conda create -n "$CONDA_ENV" -y -c conda-forge \
+            python=3.10 \
+            r-base=4.4 \
+            r-biocmanager \
+            rpy2 \
+            jq \
+            zlib \
+            dash \
+            plotly \
+            pandas \
+            scikit-learn \
+            matplotlib \
+            libstdcxx-ng \
+            postgresql
+    }
+
+    print_status "Activating rnable environment..."
+    source "$MINICONDA_DIR/bin/activate"
+    conda activate "$CONDA_ENV"
+
+    print_success "Miniconda setup complete"
+    install_deseq2
+}
+
+# Install DESeq2 using BiocManager
+install_deseq2() {
+    print_status "Installing R/DESeq2 via BiocManager in the rnable env..."
+    source "$MINICONDA_DIR/bin/activate"
+    conda activate "$CONDA_ENV"
+    Rscript -e 'if (!requireNamespace("BiocManager", quietly=TRUE)) install.packages("BiocManager", repos="https://cloud.r-project.org"); BiocManager::install("DESeq2", ask=FALSE, update=FALSE)'
+    print_success "DESeq2 installed in the rnable environment"
+}
+
 # Function to install pyenv
 install_pyenv() {
     if command_exists pyenv; then
@@ -100,11 +169,7 @@ install_pyenv() {
 
     print_status "Installing pyenv..."
 
-    if [[ "$OS" == "macos" ]]; then
-        brew install pyenv
-    elif [[ "$OS" == "ubuntu" ]]; then
-        curl -fsSL https://pyenv.run | bash
-    fi
+    conda install -n "$CONDA_ENV" -y -c conda-forge pyenv
 
     # Add pyenv to shell configuration
     SHELL_RC=""
@@ -152,12 +217,7 @@ install_pipx() {
     else
         print_status "Installing pipx..."
 
-        if [[ "$OS" == "macos" ]]; then
-            brew install pipx
-        elif [[ "$OS" == "ubuntu" ]]; then
-            sudo apt install -y pipx
-        fi
-
+        conda install -n "$CONDA_ENV" -y -c conda-forge pipx
         print_success "pipx installed successfully"
     fi
 
@@ -172,7 +232,7 @@ install_poetry() {
         print_status "Poetry is already installed. Skipping..."
     else
         print_status "Installing Poetry..."
-        pipx install poetry
+        conda install -n "$CONDA_ENV" -y -c conda-forge poetry
         print_success "Poetry installed successfully"
     fi
 }
@@ -194,7 +254,7 @@ install_precommit() {
         print_status "pre-commit is already installed. Skipping..."
     else
         print_status "Installing pre-commit..."
-        pip install pre-commit
+        conda install -n "$CONDA_ENV" -y -c conda-forge pre-commit
         print_success "pre-commit installed successfully"
     fi
 }
@@ -204,19 +264,14 @@ install_postgres() {
     if command_exists psql; then
         print_status "PostgreSQL is already installed. Skipping..."
     else
-        print_status "Installing PostgreSQL..."
-
-        if [[ "$OS" == "macos" ]]; then
-            brew install postgresql@17
-            print_warning "PostgreSQL installed. You may need to start the service with: brew services start postgresql@17"
-        elif [[ "$OS" == "ubuntu" ]]; then
-            sudo apt install -y postgresql
-            print_warning "PostgreSQL installed. You may need to start the service with: sudo systemctl start postgresql"
-        fi
-
-        print_success "PostgreSQL installed successfully"
+        print_status "Installing PostgreSQL into the rnable env..."
+        conda install -n "$CONDA_ENV" -y -c conda-forge postgresql
+        print_warning "PostgreSQL client installed inside rnable env; system-level service start is not handled by this script"
+        print_success "PostgreSQL client installed successfully"
     fi
 }
+
+
 
 # Function to initialize pre-commit
 init_precommit() {
@@ -248,6 +303,8 @@ main() {
     fi
 
     # Install dependencies
+    install_miniconda
+    install_deseq2
     install_pyenv
     install_pipx
     install_poetry
