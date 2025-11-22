@@ -3,7 +3,7 @@ Django project supporting informatics analyses
 
 Written by Ryland Bednarek
 
-#Setup Instructions
+# Setup Instructions
 
 ## Installation
 
