@@ -21,6 +21,7 @@ To Do:
 
 - Python 3.8+
 - PostgreSQL 12+
+- R 4.4.3
 
 ## Installation
 
