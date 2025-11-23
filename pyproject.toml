@@ -2,7 +2,7 @@
 name = "rnable-2"
 version = "0.1.0"
 description = "Django project supporting informatics analyses"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["Ryland Bednarek <rybednarek@gmail.com>"]
 readme = "README.md"
 packages = [{include = "rnable_2"}]
 
