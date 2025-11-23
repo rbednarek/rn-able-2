@@ -22,6 +22,7 @@ A Django based web application project supporting a variety of informatics based
 ## Table of Contents
 - [Introduction](#introduction)
 - [How It Works](#how-it-works)
+  - [Differential Expression Analysis](#differential-expression-analysis)
 - [Getting Started](#getting-started)
   - [Dependencies](#dependencies)
   - [Configuration](#configuration)
