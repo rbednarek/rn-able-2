@@ -32,7 +32,7 @@ A Django based web application project supporting a variety of informatics based
 
 This project uses Plotly, DESeq2 and a Python (Django) backend to provide users with an interactive informatics analysis experience.
 
-![app screenshot](rnable/static/images/tutorial/homepage_screenshot_small.png "app screenshot")
+![app screenshot](rnable_2/static/images/tutorial/homepage_screenshot_small.png "app screenshot")
 
 From the homepage, users can navigate to apps supporting Differential Expression Analysis and Enrichment Analysis, or upload existing results output files to the differential expression analysis database.
 
@@ -55,7 +55,7 @@ When you open the app, you'll be prompted to upload two files:
 - Rows represent samples
 - Must include at least one column defining sample groups or conditions
 
-![de screenshot](rnable/static/images/tutorial/de_analysis_screenshot_initial.png "de screenshot")
+![de screenshot](rnable_2/static/images/tutorial/de_analysis_screenshot_initial.png "de screenshot")
 
 **Processing Steps**
 
@@ -73,7 +73,7 @@ When you open the app, you'll be prompted to upload two files:
 > [!NOTE]
 > You can a download session metadata CSV anytime after uploading files. Once groups are defined, sample data will also be included in the report.
 
-![defull screenshot](rnable/static/images/tutorial/de_analysis_screenshot_full.png "defull screenshot")
+![defull screenshot](rnable_2/static/images/tutorial/de_analysis_screenshot_full.png "defull screenshot")
 
 ## Getting Started
 
