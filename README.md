@@ -13,7 +13,7 @@
 ![JavaScript](https://img.shields.io/badge/-JavaScript-000?&logo=JavaScript)
 </div>
 
-A Django based web application project supporting a variety of informatics based tools and analyses
+A Django based web application supporting a variety of informatics based tools and analyses
 
 > [!NOTE]
 > The project currently only supports tools related to bulk RNA-Seq analysis.
