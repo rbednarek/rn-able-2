@@ -36,6 +36,14 @@
                 Upload DE results to see available sessions.
             {% endif %}
         </p>
+
+        <div class="upload-button" id="download-button" style="display: none;">
+            <button type="button" id="download-de-results" class="info-link upload-trigger">
+                <img src="{% static 'images/icons/app_button.png' %}"
+                     alt="Download Icon" class="info-link-img">
+                <span class="info-link-text">Download DE Results</span>
+            </button>
+        </div>
     </div>
 
     <div class="enrichment-panel plot-panel">
@@ -52,8 +60,11 @@
 const sessionSelect = document.getElementById('session-select');
 const statusText = document.getElementById('enrichment-status');
 const plotContainer = document.getElementById('de-scatter');
+const downloadButton = document.getElementById('download-button');
+const downloadDeResultsBtn = document.getElementById('download-de-results');
 const sessionIds = JSON.parse(document.getElementById('session-ids').textContent || '[]');
 const endpointTemplate = "{% url 'enrichment:session_de_data' session_id='__SESSION_ID__' %}";
+let currentSessionData = null;
 const emptyLayout = {
     title: 'Select a session to start plotting',
     paper_bgcolor: 'transparent',
@@ -147,9 +158,15 @@ async function loadSession(sessionId) {
 
         Plotly.react(plotContainer, [trace], layout, {displayModeBar: true});
         setStatus(`Plotting ${payload.padj.length} genes from session ${payload.session_id}`);
+
+        // Store data for download and show download button
+        currentSessionData = payload;
+        downloadButton.style.display = 'flex';
     } catch (error) {
         setStatus(error.message, true);
         Plotly.purge(plotContainer);
+        currentSessionData = null;
+        downloadButton.style.display = 'none';
     } finally {
         plotContainer.classList.remove('loading');
     }
@@ -159,11 +176,49 @@ function renderEmptyPlot() {
     Plotly.react(plotContainer, [], emptyLayout);
 }
 
+function downloadDeResults() {
+    if (!currentSessionData) {
+        setStatus('No data available to download.', true);
+        return;
+    }
+
+    const { session_id, genes, padj, log2FoldChange } = currentSessionData;
+
+    // Create CSV content
+    const header = 'Gene,log2FoldChange,padj\n';
+    const rows = genes.map((gene, i) => {
+        const fc = log2FoldChange[i] !== null && log2FoldChange[i] !== undefined ? log2FoldChange[i] : '';
+        const p = padj[i] !== null && padj[i] !== undefined ? padj[i] : '';
+        // Escape quotes and commas in gene names
+        const escapedGene = gene.includes(',') || gene.includes('"')
+            ? `"${gene.replace(/"/g, '""')}"`
+            : gene;
+        return `${escapedGene},${fc},${p}`;
+    }).join('\n');
+
+    const csvContent = header + rows;
+
+    // Create blob and download
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `DE_Results_${session_id}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+downloadDeResultsBtn?.addEventListener('click', downloadDeResults);
+
 sessionSelect?.addEventListener('change', () => {
     const selected = sessionSelect.value;
     if (!selected) {
         setStatus('Select a session to plot data.', true);
         renderEmptyPlot();
+        downloadButton.style.display = 'none';
+        currentSessionData = null;
         return;
     }
 
