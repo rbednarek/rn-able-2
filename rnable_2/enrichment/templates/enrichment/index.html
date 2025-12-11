@@ -9,15 +9,13 @@
 {% block content %}
 <div class="enrichment-layout">
     <div class="enrichment-panel">
-        <div class="welcome-box">
-            <pre class="ascii-title">
-                 ______           _      __                         __
-                / ____/___  _____(_)____/ /_  ____ ___  ___  ____  / /_
-               / __/ / __ \/ ___/ / ___/ __ \/ __ `__ \/ _ \/ __ \/ __/
-              / /___/ / / / /  / / /__/ / / / / / / / /  __/ / / / /_
-             /_____/_/ /_/_/  /_/\___/_/ /_/_/ /_/ /_/\___/_/ /_/\__/
-            </pre>
-        </div>
+        <pre class="ascii-title-small">
+    ______           _      __                         __
+   / ____/___  _____(_)____/ /_  ____ ___  ___  ____  / /_
+  / __/ / __ \/ ___/ / ___/ __ \/ __ `__ \/ _ \/ __ \/ __/
+ / /___/ / / / /  / / /__/ / / / / / / / /  __/ / / / /_
+/_____/_/ /_/_/  /_/\___/_/ /_/_/ /_/ /_/\___/_/ /_/\__/
+        </pre>
 
         <label for="session-select" class="form-label">Session</label>
         <select id="session-select" class="session-select" {% if not session_ids %}disabled{% endif %}>
@@ -65,7 +63,7 @@ const emptyLayout = {
     annotations: [
         {
             text: sessionIds.length
-                ? 'Choose a session from the dropdown above'
+                ? ''
                 : 'Upload DE results to see available sessions',
             xref: 'paper',
             yref: 'paper',

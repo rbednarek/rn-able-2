@@ -168,18 +168,21 @@ body {
     min-height: 220px;
     box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6),
         0 20px 40px rgba(0, 0, 0, 0.35);
+    overflow-x: hidden;
 }
 
 .enrichment-panel .ascii-title-small {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
-    padding: 14px;
-    border-radius: 6px;
-    margin-bottom: 18px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
     font-size: 12px;
     line-height: 1.1;
-    letter-spacing: 0.02em;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    margin-bottom: 18px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    max-width: 100%;
+    background-color: transparent !important;
+    background: transparent !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 .enrichment-panel .banner-ascii {
